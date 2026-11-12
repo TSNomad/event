@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import { UserCreated, LegacyPing } from './fixtures.ts';
 
-test.skip('addListener attaches at the default priority', async () => {
+test('addListener attaches at the default priority', async () => {
   const events = new InMemoryEventStrategy();
   const order: string[] = [];
   events.attach(UserCreated, () => {
@@ -29,7 +29,7 @@ test.skip('addListener attaches at the default priority', async () => {
   assert.deepEqual(order, ['before', 'added', 'after']);
 });
 
-test.skip('unsubscribe on the handle addListener returns detaches that listener', async () => {
+test('unsubscribe on the handle addListener returns detaches that listener', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const subscription = events.addListener('legacy.ping', () => {
@@ -45,7 +45,7 @@ test.skip('unsubscribe on the handle addListener returns detaches that listener'
   assert.equal(events.hasListeners('legacy.ping'), false);
 });
 
-test.skip('unsubscribe leaves the same listener attached at another priority', async () => {
+test('unsubscribe leaves the same listener attached at another priority', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const listener = () => {
@@ -60,7 +60,7 @@ test.skip('unsubscribe leaves the same listener attached at another priority', a
   assert.equal(calls, 1, 'the priority 3 registration still runs');
 });
 
-test.skip('a second unsubscribe on a spent handle does not remove a later registration', async () => {
+test('a second unsubscribe on a spent handle does not remove a later registration', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const listener = () => {
@@ -76,7 +76,7 @@ test.skip('a second unsubscribe on a spent handle does not remove a later regist
   assert.equal(calls, 1);
 });
 
-test.skip('removeListener detaches a listener', async () => {
+test('removeListener detaches a listener', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const listener = () => {
@@ -92,7 +92,7 @@ test.skip('removeListener detaches a listener', async () => {
   assert.equal(calls, 1, 'the listener did not run again');
 });
 
-test.skip('hasListeners, listenerCount and getEventIds report attached listeners at any priority', () => {
+test('hasListeners, listenerCount and getEventIds report attached listeners at any priority', () => {
   const events = new InMemoryEventStrategy();
   const listener = () => {};
   assert.equal(events.hasListeners('user.created'), false);
@@ -112,7 +112,7 @@ test.skip('hasListeners, listenerCount and getEventIds report attached listeners
   assert.deepEqual(events.getEventIds(), ['legacy.ping'], 'an id with no listeners left is not reported');
 });
 
-test.skip('clearListeners empties one event and clearAllListeners empties every event', async () => {
+test('clearListeners empties one event and clearAllListeners empties every event', async () => {
   const events = new InMemoryEventStrategy();
   const seen: string[] = [];
   events.attach(UserCreated, () => {
@@ -133,7 +133,7 @@ test.skip('clearListeners empties one event and clearAllListeners empties every 
   assert.deepEqual(events.getEventIds(), []);
 });
 
-test.skip('two handles to one registration: either removes it, and neither removes a later one', async () => {
+test('two handles to one registration: either removes it, and neither removes a later one', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const listener = () => {
@@ -153,7 +153,7 @@ test.skip('two handles to one registration: either removes it, and neither remov
   assert.equal(calls, 1, 'a handle to a removed registration left the new one attached');
 });
 
-test.skip('the 0.1 methods that take an id reject an empty one with a TypeError, as attach does', () => {
+test('the 0.1 methods that take an id reject an empty one with a TypeError, as attach does', () => {
   const events = new InMemoryEventStrategy();
 
   assert.throws(() => events.addListener('', () => {}), TypeError);
@@ -163,7 +163,7 @@ test.skip('the 0.1 methods that take an id reject an empty one with a TypeError,
   assert.throws(() => events.clearListeners(''), TypeError);
 });
 
-test.skip('the second handle alone removes the live registration', async () => {
+test('the second handle alone removes the live registration', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const listener = () => {
@@ -179,7 +179,7 @@ test.skip('the second handle alone removes the live registration', async () => {
   assert.equal(calls, 0);
 });
 
-test.skip('a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners', async () => {
+test('a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners', async () => {
   const removals: Record<string, (events: InMemoryEventStrategy, listener: () => void) => void> = {
     detach: (events, listener) => events.detach('legacy.ping', listener),
     removeListener: (events, listener) => events.removeListener('legacy.ping', listener),

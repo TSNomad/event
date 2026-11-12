@@ -20,7 +20,7 @@ test('the interface tokens carry the interface names, so they share bindings wit
   assert.equal(ActionBindingStrategy.name, 'ActionBindingStrategy');
 });
 
-test.skip('a 0.1 factory binding under the token resolves a strategy that broadcasts', async () => {
+test('a 0.1 factory binding under the token resolves a strategy that broadcasts', async () => {
   const container = new Container();
   container.bind('EventStrategy', () => new InMemoryEventStrategy());
 
@@ -34,7 +34,7 @@ test.skip('a 0.1 factory binding under the token resolves a strategy that broadc
   assert.deepEqual(seen, ['via-token']);
 });
 
-test.skip('the documented class binding gives the token and the class one shared bus', async () => {
+test('the documented class binding gives the token and the class one shared bus', async () => {
   const container = new Container();
   container.bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy);
   assert.equal(

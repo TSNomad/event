@@ -53,7 +53,7 @@ test('eventIdOf throws a TypeError when the id is empty or is not a string', () 
   assert.throws(() => eventIdOf(new NumberId() as never), TypeError);
 });
 
-test.skip('a 0.1 event with only an instance id still reaches its listeners', async () => {
+test('a 0.1 event with only an instance id still reaches its listeners', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   events.attach('legacy.ping', () => {
@@ -65,7 +65,7 @@ test.skip('a 0.1 event with only an instance id still reaches its listeners', as
   assert.equal(calls, 1);
 });
 
-test.skip('broadcast of an event with no id rejects with a TypeError and runs no listener', async () => {
+test('broadcast of an event with no id rejects with a TypeError and runs no listener', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   events.attach('undefined', () => {
@@ -76,7 +76,7 @@ test.skip('broadcast of an event with no id rejects with a TypeError and runs no
   assert.equal(calls, 0);
 });
 
-test.skip('attach with an event class that has no static id throws a TypeError naming the class', () => {
+test('attach with an event class that has no static id throws a TypeError naming the class', () => {
   const events = new InMemoryEventStrategy();
 
   assert.throws(

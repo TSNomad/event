@@ -11,7 +11,7 @@ import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import { DEFAULT_PRIORITY } from '../dist/EventStrategy.js';
 import { UserCreated, OrderPlaced, tick } from './fixtures.ts';
 
-test.skip('a listener attached by event class receives the broadcast event', async () => {
+test('a listener attached by event class receives the broadcast event', async () => {
   const events = new InMemoryEventStrategy();
   const seen: string[] = [];
   events.attach(UserCreated, (event) => {
@@ -23,7 +23,7 @@ test.skip('a listener attached by event class receives the broadcast event', asy
   assert.deepEqual(seen, ['u1']);
 });
 
-test.skip('a listener attached by id string receives the event whose static id matches', async () => {
+test('a listener attached by id string receives the event whose static id matches', async () => {
   const events = new InMemoryEventStrategy();
   const seen: string[] = [];
   events.attach<UserCreated>('user.created', (event) => {
@@ -35,7 +35,7 @@ test.skip('a listener attached by id string receives the event whose static id m
   assert.deepEqual(seen, ['u2']);
 });
 
-test.skip('a broadcast reaches only the listeners of its own event id', async () => {
+test('a broadcast reaches only the listeners of its own event id', async () => {
   const events = new InMemoryEventStrategy();
   const seen: string[] = [];
   events.attach(UserCreated, () => {
@@ -50,7 +50,7 @@ test.skip('a broadcast reaches only the listeners of its own event id', async ()
   assert.deepEqual(seen, ['order']);
 });
 
-test.skip('lower priority numbers run first, and the default priority is 10', async () => {
+test('lower priority numbers run first, and the default priority is 10', async () => {
   assert.equal(DEFAULT_PRIORITY, 10);
   const events = new InMemoryEventStrategy();
   const order: string[] = [];
@@ -75,7 +75,7 @@ test.skip('lower priority numbers run first, and the default priority is 10', as
   assert.deepEqual(order, ['negative', 'first', 'early', 'default', 'late']);
 });
 
-test.skip('listeners at the same priority run in the order they were attached', async () => {
+test('listeners at the same priority run in the order they were attached', async () => {
   const events = new InMemoryEventStrategy();
   const order: number[] = [];
   for (const n of [1, 2, 3, 4]) {
@@ -89,7 +89,7 @@ test.skip('listeners at the same priority run in the order they were attached', 
   assert.deepEqual(order, [1, 2, 3, 4]);
 });
 
-test.skip('each listener finishes before the next one starts', async () => {
+test('each listener finishes before the next one starts', async () => {
   const events = new InMemoryEventStrategy();
   const log: string[] = [];
   events.attach(UserCreated, async () => {
@@ -108,7 +108,7 @@ test.skip('each listener finishes before the next one starts', async () => {
   assert.deepEqual(log, ['slow:start', 'slow:end', 'fast:start', 'fast:end']);
 });
 
-test.skip('broadcast resolves only after the last listener has settled', async () => {
+test('broadcast resolves only after the last listener has settled', async () => {
   const events = new InMemoryEventStrategy();
   let finished = false;
   events.attach(UserCreated, async () => {
@@ -121,13 +121,13 @@ test.skip('broadcast resolves only after the last listener has settled', async (
   assert.equal(finished, true);
 });
 
-test.skip('a broadcast with no listeners resolves', async () => {
+test('a broadcast with no listeners resolves', async () => {
   const events = new InMemoryEventStrategy();
 
   await assert.doesNotReject(() => events.broadcast(new UserCreated('u')));
 });
 
-test.skip('the same listener at the same priority is registered once', async () => {
+test('the same listener at the same priority is registered once', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const listener = () => {
@@ -142,7 +142,7 @@ test.skip('the same listener at the same priority is registered once', async () 
   assert.equal(calls, 1);
 });
 
-test.skip('the same listener at two priorities runs once at each', async () => {
+test('the same listener at two priorities runs once at each', async () => {
   const events = new InMemoryEventStrategy();
   const order: string[] = [];
   const listener = () => {
@@ -159,7 +159,7 @@ test.skip('the same listener at two priorities runs once at each', async () => {
   assert.deepEqual(order, ['shared', 'middle', 'shared']);
 });
 
-test.skip('a listener attached during a broadcast runs from the next broadcast', async () => {
+test('a listener attached during a broadcast runs from the next broadcast', async () => {
   const events = new InMemoryEventStrategy();
   const seen: string[] = [];
   const late = () => {
@@ -177,7 +177,7 @@ test.skip('a listener attached during a broadcast runs from the next broadcast',
   assert.deepEqual(seen, ['first', 'first', 'late']);
 });
 
-test.skip('a listener detached during a broadcast still runs in that broadcast, and not after', async () => {
+test('a listener detached during a broadcast still runs in that broadcast, and not after', async () => {
   const events = new InMemoryEventStrategy();
   const seen: string[] = [];
   const second = () => {

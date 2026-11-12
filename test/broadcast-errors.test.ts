@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import { UserCreated, OrderPlaced, tick } from './fixtures.ts';
 
-test.skip('every listener runs when earlier ones throw or reject, then one AggregateError carries every error in run order', async () => {
+test('every listener runs when earlier ones throw or reject, then one AggregateError carries every error in run order', async () => {
   const events = new InMemoryEventStrategy();
   const ran: string[] = [];
   const syncError = new Error('sync failure');
@@ -48,7 +48,7 @@ test.skip('every listener runs when earlier ones throw or reject, then one Aggre
   assert.equal(caught.message, "3 listener(s) threw during broadcast of 'user.created'", 'the 0.1 message, with the count and the id');
 });
 
-test.skip('the AggregateError comes only after the last listener has settled', async () => {
+test('the AggregateError comes only after the last listener has settled', async () => {
   const events = new InMemoryEventStrategy();
   let lastFinished = false;
   events.attach(UserCreated, () => {
@@ -64,7 +64,7 @@ test.skip('the AggregateError comes only after the last listener has settled', a
   assert.equal(lastFinished, true);
 });
 
-test.skip('a single failing listener still rejects with an AggregateError of one', async () => {
+test('a single failing listener still rejects with an AggregateError of one', async () => {
   const events = new InMemoryEventStrategy();
   const failure = new Error('only failure');
   events.attach(UserCreated, () => {
@@ -78,7 +78,7 @@ test.skip('a single failing listener still rejects with an AggregateError of one
   );
 });
 
-test.skip('a broadcast where every listener succeeds resolves', async () => {
+test('a broadcast where every listener succeeds resolves', async () => {
   const events = new InMemoryEventStrategy();
   events.attach(UserCreated, () => {});
   events.attach(UserCreated, async () => {
@@ -88,7 +88,7 @@ test.skip('a broadcast where every listener succeeds resolves', async () => {
   await assert.doesNotReject(() => events.broadcast(new UserCreated('u')));
 });
 
-test.skip('broadcast rejects an event class, a number and a string with a TypeError, and runs no listener', async () => {
+test('broadcast rejects an event class, a number and a string with a TypeError, and runs no listener', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   events.attach(UserCreated, () => {

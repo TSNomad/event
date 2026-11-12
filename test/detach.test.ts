@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import { UserCreated, NoId } from './fixtures.ts';
 
-test.skip('detach removes a listener so the next broadcast skips it', async () => {
+test('detach removes a listener so the next broadcast skips it', async () => {
   const events = new InMemoryEventStrategy();
   const seen: string[] = [];
   const keep = () => {
@@ -28,7 +28,7 @@ test.skip('detach removes a listener so the next broadcast skips it', async () =
   assert.deepEqual(seen, ['keep']);
 });
 
-test.skip('detach with a priority removes only the registration at that priority', async () => {
+test('detach with a priority removes only the registration at that priority', async () => {
   const events = new InMemoryEventStrategy();
   const order: string[] = [];
   const listener = () => {
@@ -46,7 +46,7 @@ test.skip('detach with a priority removes only the registration at that priority
   assert.deepEqual(order, ['marker', 'listener'], 'the priority 9 registration survived, the priority 1 one did not');
 });
 
-test.skip('detach with a priority the listener is not at leaves it attached', async () => {
+test('detach with a priority the listener is not at leaves it attached', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   const listener = () => {
@@ -60,7 +60,7 @@ test.skip('detach with a priority the listener is not at leaves it attached', as
   assert.equal(calls, 1);
 });
 
-test.skip('detach without a priority removes the registration at the default priority only', async () => {
+test('detach without a priority removes the registration at the default priority only', async () => {
   const events = new InMemoryEventStrategy();
   const order: string[] = [];
   const listener = (event: UserCreated) => {
@@ -79,14 +79,14 @@ test.skip('detach without a priority removes the registration at the default pri
   assert.deepEqual(order, ['u', 'marker', 'u'], 'priorities 1 and 20 stay, priority 10 went');
 });
 
-test.skip('attach and detach reject an empty event id with a TypeError', () => {
+test('attach and detach reject an empty event id with a TypeError', () => {
   const events = new InMemoryEventStrategy();
 
   assert.throws(() => events.attach('', () => {}), TypeError);
   assert.throws(() => events.detach('', () => {}), TypeError);
 });
 
-test.skip('detach by a class with no static id throws a TypeError naming the class', () => {
+test('detach by a class with no static id throws a TypeError naming the class', () => {
   const events = new InMemoryEventStrategy();
 
   assert.throws(
@@ -95,7 +95,7 @@ test.skip('detach by a class with no static id throws a TypeError naming the cla
   );
 });
 
-test.skip('attach and detach reject a priority that is not an integer with a RangeError', () => {
+test('attach and detach reject a priority that is not an integer with a RangeError', () => {
   const events = new InMemoryEventStrategy();
 
   for (const priority of [Number.NaN, 1.5, Number.POSITIVE_INFINITY]) {
@@ -105,7 +105,7 @@ test.skip('attach and detach reject a priority that is not an integer with a Ran
   assert.doesNotThrow(() => events.attach(UserCreated, () => {}, -3), 'a negative integer is a priority');
 });
 
-test.skip('detaching a listener that is not attached does nothing', async () => {
+test('detaching a listener that is not attached does nothing', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
   events.attach(UserCreated, () => {
