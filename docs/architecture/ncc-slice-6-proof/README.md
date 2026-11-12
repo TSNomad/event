@@ -44,3 +44,17 @@ implementer's, 55 entries with the three controls, run against the P3
 head, af14676. Both logs end with zero mismatches. Each list targets
 the code at its own head, so rerun it from a checkout of that commit.
 The review's spot check above covers the later head, 3af80be.
+
+## Lane s06-b fixes
+
+`s06-b-mutations.py` and its log prove the unit tests for two findings
+the review left open, `attach` refusing a listener that is not a
+function and a subclass's own 0.1 `getId` winning over an inherited
+static one, and the test that autowires `EventStrategy` through an
+`inject` list. It holds one mutation per guard and the three controls.
+The A entries change the container installed in `node_modules`, so run
+`npm install` first:
+
+```
+python3 docs/architecture/ncc-slice-6-proof/mutate.py . docs/architecture/ncc-slice-6-proof/s06-b-mutations.py
+```

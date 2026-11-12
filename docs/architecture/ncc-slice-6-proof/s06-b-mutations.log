@@ -1,0 +1,65 @@
+mutations in ncc-s06-b-event, tests in ncc-s06-b-event
+baseline exit=0
+C1-must-catch attach registers nothing: KILLED exit=1 expect=killed OK
+    ✖ a 0.1 event with only an instance id still reaches its listeners
+    ✖ a 0.1 factory binding under the token resolves a strategy that broadcasts
+    ✖ a broadcast reaches only the listeners of its own event id
+    ✖ a listener attached by event class receives the broadcast event
+    ✖ a listener attached by id string receives the event whose static id matches
+    ✖ a listener attached during a broadcast runs from the next broadcast
+    ✖ a listener detached during a broadcast still runs in that broadcast, and not after
+    ✖ a registration attached between two priorities runs between them
+    ✖ a single failing listener still rejects with an AggregateError of one
+    ✖ a subclass that declares a 0.1 instance getId uses it over a static getId it inherits
+    ✖ addListener attaches at the default priority
+    ✖ an explicit undefined priority is the default, and null is refused
+    ✖ an inject list naming the EventStrategy token autowires the bound bus
+    ✖ broadcast resolves only after the last listener has settled
+    ✖ detach removes a listener so the next broadcast skips it
+    ✖ detach with a priority removes only the registration at that priority
+    ✖ detach with a priority the listener is not at leaves it attached
+    ✖ detach without a priority removes the registration at the default priority only
+    ✖ detaching a listener that is not attached does nothing
+    ✖ each listener finishes before the next one starts
+    ✖ every listener runs when earlier ones throw or reject, then one AggregateError carries every error in run order
+    ✖ hasListeners, listenerCount and getEventIds report attached listeners at any priority
+    ✖ listeners at the same priority run in the order they were attached
+    ✖ lower priority numbers run first, and the default priority is 10
+    ✖ the AggregateError comes only after the last listener has settled
+    ✖ the documented class binding gives the token and the class one shared bus
+    ✖ the same listener at the same priority is registered once
+    ✖ the same listener at two priorities runs once at each
+    ✖ unsubscribe leaves the same listener attached at another priority
+C2-must-survive comment only: SURVIVED exit=0 expect=survive OK
+C3-must-refuse syntax error must be refused: REFUSED (build failed: src/InMemoryEventStrategy.ts(293,3): error TS1128: Declaration or statement expected.)  expect=refuse
+L1 attach takes any listener: KILLED exit=1 expect=killed OK
+    ✖ attach throws a TypeError at attach time for a listener that is not a function, and registers nothing
+L2 listener checked after it is registered: KILLED exit=1 expect=killed OK
+    ✖ attach throws a TypeError at attach time for a listener that is not a function, and registers nothing
+I1 an inherited static id always wins, the 0.1 order before the fix: KILLED exit=1 expect=killed OK
+    ✖ a subclass that declares a 0.1 instance getId uses it over a static getId it inherits
+I2 a static id declared on a class does not stop the walk: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf prefers the static id when both exist
+    ✖ the static getId still wins when it is declared as near as the instance getId, or nearer
+I3 an instance getId of its own is not seen: KILLED exit=1 expect=killed OK
+    ✖ a subclass that declares a 0.1 instance getId uses it over a static getId it inherits
+I4 an instance getId on a class's prototype is not seen: KILLED exit=1 expect=killed OK
+    ✖ a subclass that declares a 0.1 instance getId uses it over a static getId it inherits
+I5 the instance id wins a tie on one class: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf prefers the static id when both exist
+    ✖ the static getId still wins when it is declared as near as the instance getId, or nearer
+I6 the instance branch runs without an instance getId function: KILLED exit=1 expect=killed OK
+    ✖ a subclass instance getId that is not a function leaves the inherited static id in force
+    ✖ an anonymous class with no id gets a stand-in label in the TypeError
+    ✖ an object with a null prototype and no getId throws a TypeError saying it has no class
+    ✖ eventIdOf throws a TypeError naming the class when there is no id
+I7 a missing prototype reaches Object.hasOwn: KILLED exit=1 expect=killed OK
+    ✖ a constructor chain of functions with no prototype still finds the static id
+A1 the container resolves no inject entry: KILLED exit=1 expect=killed OK
+    ✖ an inject list naming the EventStrategy token autowires the bound bus
+A2 each abstract of a class bind gets its own instance: KILLED exit=1 expect=killed OK
+    ✖ an inject list naming the EventStrategy token autowires the bound bus
+    ✖ the documented class binding gives the token and the class one shared bus
+A3 an inject entry autowires a fresh instance of its concrete: KILLED exit=1 expect=killed OK
+    ✖ an inject list naming the EventStrategy token autowires the bound bus
+mismatches=0
