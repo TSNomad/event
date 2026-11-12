@@ -1,8 +1,6 @@
 /**
  * Acceptance tests: attach with priority and one-at-a-time broadcast on
  * InMemoryEventStrategy. See docs/architecture/ncc-slice-6.md.
- *
- * Marked `test.skip` while InMemoryEventStrategy is a stub.
  */
 
 import { test } from 'node:test';

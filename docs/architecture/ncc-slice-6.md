@@ -1,7 +1,9 @@
 # Event reshape toward PHPNomad
 
-Status: architecture phase. Stubs and acceptance tests are committed.
-The acceptance tests are marked `test.skip` until each packet lands.
+Status: implemented. Packets P2 (`eventIdOf`) and P3
+(`InMemoryEventStrategy`) landed on this branch, and the slice review's
+fixes are in. Every acceptance test runs. The consumer check against
+the five current consumers has not run yet.
 
 This is slice 6 of the Siren Node commerce connectors build, the event
 half. The container half lives in the di-container repository, in its
@@ -39,13 +41,19 @@ events.detach(UserCreated, audit, 5);
   The listeners that run are those attached when broadcast started.
   There is no per-listener timeout, so a listener whose promise never
   settles stalls the broadcast and every listener after it. A listener
-  that waits on something slow gives that wait its own timeout. The strategy runs each listener once
-  per broadcast and never retries. A caller or a platform that
+  that waits on something slow gives that wait its own timeout.
+- The strategy runs each registration once per broadcast and never
+  retries. A listener attached at two priorities has two registrations,
+  so it runs twice in one broadcast. A caller or a platform that
   broadcasts the same event again after a failure runs every listener
   again, including the ones that succeeded. Listeners must tolerate
-  that, and work that must happen once keys its idempotency on facts
-  from the event, such as the order id and the event id, never on the
-  time or a random value.
+  that. Work that must happen once keys its idempotency on the event's
+  own data, such as the order id and the kind of work, never on the time
+  or a random value. The event id names the event type, so every event
+  of that type shares it, and it cannot tell two events apart. Dedupe at
+  the write itself, in one atomic step, such as an insert a unique key
+  refuses. A read followed by a separate write lets two runs both pass
+  the read.
 - `attach(event, action, priority = 10)` takes an event class or an id.
   An id string is used as given and must not be empty. A priority is an
   integer, as PHPNomad's `?int` is. The same listener at the same
@@ -205,6 +213,21 @@ consumer check confirms it on the built code.
   back after all have run.
 - Broadcast runs the listeners attached when it started. WordPress hooks
   see an attach or detach made by a running listener.
+- PHPNomad keys an interface by its fully qualified class name. A token
+  here carries the bare interface name, `'EventStrategy'` and
+  `'ActionBindingStrategy'`, not the namespaced form design section 2
+  shows, `'tsnomad/event/EventStrategy'`. `@tsnomad/loader` 0.1 binds
+  and reads the bare string `'EventStrategy'`, and a typed token shares
+  a binding with a string of its name, so the bare name keeps the 0.1
+  loader working. Two packages that export interfaces with one name
+  would share a key, so a new interface must not reuse a token name.
+- `HasEventBindings` has a typed shape. PHPNomad declares
+  `getEventBindings(): array`, and the shape lives only in its loader,
+  which takes an action either as `['action' => ..., 'transformer' =>
+  ...]` or as a bare action string. This package types both forms, and
+  a bare string means what that loader makes it mean: an action bound
+  with no transformer, so the strategy builds the event class from the
+  action's arguments.
 - `HasListeners` keys by event id, because an object key cannot be a
   class. A listener needs only the id, and an id-keyed record is the
   shape the 0.1 loader already reads. `HasEventBindings` returns
@@ -222,9 +245,17 @@ consumer check confirms it on the built code.
   0.1 implementations. It then needs a transformer.
 - The 0.1 instance `getId()` still works through `eventIdOf`.
 - PHPNomad's event package holds only interfaces, and each integration
-  ships its strategy. This one also ships `InMemoryEventStrategy`,
-  because 0.1 consumers already build their bus from this package.
-  `@tsnomad/node-integration` may re-export it.
+  ships its strategy. `InMemoryEventStrategy` follows that split, as
+  design section 2 says: slice 8 moves the class into
+  `@tsnomad/node-integration`, and this package keeps a deprecated
+  re-export of it until its next breaking release. Until slice 8 lands,
+  the class lives here. Import it from `@tsnomad/node-integration` once
+  that package ships, and the import changes only once. Code that keeps
+  importing it from here goes on working until that breaking release.
+- A `null` priority throws a `RangeError`, where PHPNomad's WordPress
+  strategy maps `null` to 10. Leaving the priority out, or passing
+  `undefined`, gives 10. Strict TypeScript already refuses `null` there, and a
+  `null` from JavaScript is more likely a bug than a choice.
 - PHPNomad's event package requires nothing at run time. This one
   depends on `@tsnomad/di-container` for `createToken`, so its tokens
   share the container's typed-token rules.
@@ -236,17 +267,13 @@ consumer check confirms it on the built code.
 
 ## Files
 
-| File | Role | State |
-|---|---|---|
-| `src/types.ts` | `Event`, `EventClass`, handler and binding types | final |
-| `src/EventStrategy.ts` | the interface, its token and `DEFAULT_PRIORITY` | final |
-| `src/ActionBindingStrategy.ts` | the interface and its token | final |
-| `src/eventIdOf.ts` | id resolution | stubbed, returns `''` |
-| `src/InMemoryEventStrategy.ts` | the in-memory strategy | stubbed, every method a no-op returning an empty value |
-
-The stubs return a valid value of the declared type and never throw.
-`eventIdOf` returns `''`, a value its contract forbids, because any real
-id would be a guess. It is the one tolerated placeholder.
+| File | Role |
+|---|---|
+| `src/types.ts` | `Event`, `EventClass`, `EventInstance`, handler and binding types |
+| `src/EventStrategy.ts` | the interface, its token and `DEFAULT_PRIORITY` |
+| `src/ActionBindingStrategy.ts` | the interface and its token |
+| `src/eventIdOf.ts` | id resolution, packet P2 |
+| `src/InMemoryEventStrategy.ts` | the in-memory strategy, packet P3 |
 
 ## Acceptance tests
 
@@ -260,19 +287,28 @@ id would be a guess. It is the one tolerated placeholder.
 | `test/event-strategy-token.test.ts` | 3 | integration shape: the token names, a 0.1 string binding found through the token, and the documented class binding giving one shared bus through a real container |
 | `test/event-type-safety.ts` | 14 rejected calls | compile-only: inferred listener types, static ids required by `EventClass`, priority type, transformer return types by class, by id and in a plain binding list, a required transformer for an id, what `broadcast` refuses and the generic forwarding it keeps, the documented binding compiling |
 
-That is 47 runtime tests. The token-name test carries no marker,
-because the tokens are final. The shared-bus test also needs the
-container's class `bind`, so it passes once both packets land. Against
-the container stub it fails on an assertion that names the container
-packet.
-`test/fixtures.ts` holds the event classes the tests share. `npm test`
+That is 47 acceptance tests. The shared-bus test runs against the
+container's class `bind`, installed from the container's slice branch.
+The packets added unit tests of their own internals:
+`test/eventIdOf-internals.test.ts` (6) and
+`test/in-memory-internals.test.ts` (11). `npm test` reports 66, because
+it also counts the compile-only file and the fixtures file as empty
+passes. `test/fixtures.ts` holds the event classes the tests share. `npm test`
 builds and runs every file. `npm run typecheck` checks the compile-only
 file.
 
 ## Proof
 
 The record is in `docs/architecture/ncc-slice-6-proof/`: the
-harnesses, the mutation lists and their logs.
+harnesses, the mutation lists and their logs. It holds three sets. The
+architecture phase's lists, described below, scored the tests against
+a scratch implementation. The P2 and P3 implementers' lists scored the
+real code at their packet heads, 0cd8566 and af14676: 19 and 55
+entries, with zero mismatches. The slice review's spot check scored
+the branch at 3af80be. The proof folder's README says how to rerun
+each.
+
+The architecture phase's proof ran as follows.
 
 A scratch implementation in a separate clone passed all 47 runtime
 tests, against a scratch container that passed the container's tests.

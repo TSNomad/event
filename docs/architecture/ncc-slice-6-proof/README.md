@@ -16,8 +16,10 @@ as the Proof section of `../ncc-slice-6.md` describes.
   container, scored by `mutate.py` against this package's suite, with
   its three controls, into `cross-repo-mutations.log`.
 
-The mutations target a scratch implementation in a separate clone that
-is never committed, so they do not apply to this branch. Each run
+`mutations.py`, `type-mutations.py`, `cross-repo-mutations.py` and
+their logs come from the architecture phase. They target a scratch
+implementation in a separate clone that is never committed, so they do
+not apply to this branch. Each run
 starts with three controls: a break the harness must catch, a comment it
 must not, and a syntax error it must refuse to score.
 
@@ -33,5 +35,12 @@ python3 docs/architecture/ncc-slice-6-proof/mutate.py . docs/architecture/ncc-sl
 
 The brief capped the review at ten mutations, so the list samples
 `InMemoryEventStrategy` and `eventIdOf` and does not cover every guard.
-The P2 and P3 implementers' full lists are not in this folder. Their
-logs are pasted in the packet comments on the pull request.
+## Packet P2 and P3 lists
+
+`p2-mutations.py` and `p2-mutations.log` are the P2 implementer's full
+list, 19 entries with the three controls, run against the P2 head,
+0cd8566. `p3-mutations.py` and `p3-mutations.log` are the P3
+implementer's, 55 entries with the three controls, run against the P3
+head, af14676. Both logs end with zero mismatches. Each list targets
+the code at its own head, so rerun it from a checkout of that commit.
+The review's spot check above covers the later head, 3af80be.

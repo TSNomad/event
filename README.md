@@ -56,14 +56,38 @@ const events = await container.get(EventStrategy);
 - Broadcast runs listeners one at a time instead of in parallel.
 - An empty event id, or a priority that is not an integer, throws, from
   the 0.1 methods too.
-- A listener may run again for the same event when a broadcast is
-  repeated after a failure, so work that must happen once needs an
-  idempotency key built from the event.
+- A listener may run more than once for the same event: once per
+  priority it is attached at, and again when a broadcast is repeated
+  after a failure. Work that must happen once keys its idempotency on
+  the event's own data, such as an order id, not on the event id, which
+  every event of that type shares. Dedupe at the write in one atomic
+  step, such as an insert a unique key refuses.
 
 ## Where this differs from PHPNomad
 
-The architecture note, `docs/architecture/ncc-slice-6.md`, keeps the
-list of differences and the reason for each.
+- `broadcast` is async, returns a promise and awaits each listener in
+  turn. PHPNomad is synchronous. Node's I/O forces this one.
+- A failing listener does not stop the rest. One `AggregateError` comes
+  back after every listener has run.
+- Event ids are static, as in PHPNomad, but an `EventStrategy` token
+  stands in for the interface, because TypeScript erases interfaces.
+  Tokens carry the bare interface name, `'EventStrategy'`, not a
+  namespaced one.
+- `attach` and `detach` also take an event id string, for 0.1 callers.
+  A `null` priority throws, where PHPNomad maps it to 10.
+- `HasListeners` keys by event id and `HasEventBindings` returns
+  `[EventClass, actions]` pairs, because an object key cannot be a
+  class. A bare action string binds with no transformer, as PHPNomad's
+  loader reads it.
+- A transformer answers an event or null, and any other answer throws.
+- PHPNomad's event package holds only interfaces. `InMemoryEventStrategy`
+  ships here for now and moves to `@tsnomad/node-integration` when that
+  package ships. A deprecated re-export then stays here until this
+  package's next breaking release, so switch the import once, when you
+  choose.
+
+The architecture note, `docs/architecture/ncc-slice-6.md`, gives the
+reason for each and the full list.
 
 ## Extracted 2026-09-17
 

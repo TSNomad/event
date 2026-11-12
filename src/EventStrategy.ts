@@ -28,11 +28,12 @@ export interface EventStrategy {
    * listener whose promise never settles stalls the broadcast and every
    * listener after it, because there is no per-listener timeout. A
    * listener that waits on something slow gives it its own timeout.
-   * The strategy never runs a listener
-   * twice for one broadcast and never retries. A caller that broadcasts
-   * the same event again after a failure runs every listener again,
-   * including the ones that succeeded, so listeners must tolerate that,
-   * as `CanHandle.handle` describes. Work that must survive a failure
+   * The strategy runs each registration once per broadcast and never
+   * retries. A listener attached at two priorities has two
+   * registrations, so it runs twice in one broadcast. A caller that
+   * broadcasts the same event again after a failure runs every listener
+   * again, including the ones that succeeded, so listeners must tolerate
+   * that, as `CanHandle.handle` describes. Work that must survive a failure
    * belongs behind a durable queue.
    *
    * The listeners that run are the ones attached when broadcast starts.

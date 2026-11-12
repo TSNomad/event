@@ -1,8 +1,6 @@
 /**
  * Acceptance tests: detach, with and without a priority. See
  * docs/architecture/ncc-slice-6.md.
- *
- * Marked `test.skip` while InMemoryEventStrategy is a stub.
  */
 
 import { test } from 'node:test';

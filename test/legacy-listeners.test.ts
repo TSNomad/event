@@ -2,8 +2,6 @@
  * Acceptance tests: the 0.1 listener methods keep working on
  * InMemoryEventStrategy, deprecated, for the five current consumers.
  * See docs/architecture/ncc-slice-6.md.
- *
- * Marked `test.skip` while InMemoryEventStrategy is a stub.
  */
 
 import { test } from 'node:test';

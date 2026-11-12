@@ -2,8 +2,6 @@
  * Acceptance tests: a failing listener never stops the others, and the
  * failures come back together as one AggregateError. See
  * docs/architecture/ncc-slice-6.md.
- *
- * Marked `test.skip` while InMemoryEventStrategy is a stub.
  */
 
 import { test } from 'node:test';

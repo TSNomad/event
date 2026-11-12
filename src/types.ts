@@ -50,13 +50,19 @@ export interface CanHandle<E extends Event = Event> {
    * Handles the event.
    * Can be sync or async.
    *
-   * A handler may run again for the same event. A caller that
-   * broadcasts the event again after a failure, or a platform that
-   * reruns a failed action, reruns every listener, including the ones
-   * that succeeded.
-   * Work that must happen once keys its idempotency on facts from the
-   * event, such as the order id and the event id, never on the time or
-   * a random value.
+   * A handler may run more than once for the same event: once per
+   * priority it is attached at, and again whenever a caller broadcasts
+   * the event again after a failure or a platform reruns a failed
+   * action, which reruns every listener, including the ones that
+   * succeeded.
+   *
+   * Work that must happen once keys its idempotency on the event's own
+   * data, such as the order id and the kind of work, never on the time
+   * or a random value. The event id is not enough, because it names the
+   * event type and every event of that type shares it. Dedupe at the
+   * write itself, in one atomic step, such as an insert a unique key
+   * refuses, because a read followed by a separate write lets two runs
+   * both pass the read.
    */
   handle(event: E): void | Promise<void>;
 }

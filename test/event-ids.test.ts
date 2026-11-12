@@ -1,8 +1,6 @@
 /**
  * Acceptance tests: static event ids, with the 0.1 instance id still
  * honored. See docs/architecture/ncc-slice-6.md.
- *
- * Marked `test.skip` while eventIdOf and InMemoryEventStrategy are stubs.
  */
 
 import { test } from 'node:test';

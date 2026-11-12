@@ -1,10 +1,8 @@
 /**
  * Acceptance tests, integration shape: the event package wired through
  * a real container, the way an application wires it. The class-path
- * `bind` comes from @tsnomad/di-container 0.2.0, so the second test
- * needs both the container's packet and this package's packet.
- *
- * Marked `test.skip` while InMemoryEventStrategy is a stub.
+ * `bind` comes from @tsnomad/di-container 0.2.0, so the shared-bus test
+ * runs against that container's class `bind`.
  */
 
 import { test } from 'node:test';
@@ -40,7 +38,7 @@ test('the documented class binding gives the token and the class one shared bus'
   assert.equal(
     container.has(EventStrategy),
     true,
-    'needs the container packet: @tsnomad/di-container with bind(concrete, ...abstracts) implemented'
+    'bind(concrete, ...abstracts) in the installed @tsnomad/di-container did not register the token'
   );
 
   const byToken = await container.get(EventStrategy);
