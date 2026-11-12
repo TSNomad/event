@@ -44,7 +44,8 @@ export interface EventStrategy {
    * twice leaves one registration. The same listener at two priorities
    * runs once at each.
    *
-   * @param event - An event class, read through its static getId(), or an id
+   * @param event - An event class, read through its static getId(), or
+   *   an id string, used as given
    * @param action - The listener, sync or async
    * @param priority - Lower runs first. Defaults to DEFAULT_PRIORITY.
    */

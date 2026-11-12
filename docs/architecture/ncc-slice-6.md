@@ -35,7 +35,8 @@ events.detach(UserCreated, audit, 5);
   listener never stops the outbox listener (A30). The listeners that run
   are those attached when broadcast started.
 - `attach(event, action, priority = 10)` takes an event class or an id.
-  The same listener at the same priority is registered once.
+  An id string is used as given. The same listener at the same priority
+  is registered once.
 - `detach(event, action, priority?)` removes one priority's registration,
   or every priority's when none is given. Detaching what is not attached
   does nothing.
@@ -133,9 +134,24 @@ builds and runs every file. `npm run typecheck` checks the compile-only
 file. The token-name test carries no marker, because the tokens are
 final.
 
+## Proof
+
+Each runtime acceptance test was run against a scratch implementation in
+a separate clone, which was then thrown away. All 38 runtime tests
+passed. Then 35 mutations, one per guard, each built cleanly and turned
+the suite red with the expected tests failing. The harness ran three
+controls each round: a break it must catch, a comment it must not, and a
+syntax error it must refuse to score. It refused three mutations whose
+build failed, and those were rewritten until they compiled. Each `@ts-expect-error` line was
+proven by loosening the signature it guards (four mutations, each
+leaving the directive unused). The harness and its logs live in the run
+notes.
+
 ## Consumer check
 
 The container repository's `scripts/consumer-check.sh` builds and tests
 the five current consumers against both branches in throwaway clones.
-The slice is done when that check passes. The breaks listed above are
-the ones the stubs already show at compile time.
+A consumer passes when it installs and builds, and its failing tests are
+the same set as in a baseline run of its own main branch. A consumer
+that stops compiling because of the breaks above passes when only those
+fixes are applied, and the report names each fix.
