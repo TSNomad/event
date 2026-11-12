@@ -11,22 +11,22 @@ import { eventIdOf } from '../dist/eventIdOf.js';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import { UserCreated, LegacyPing, BothIds, NoId } from './fixtures.ts';
 
-test.skip('eventIdOf reads the static id from an event class and from an instance', () => {
+test('eventIdOf reads the static id from an event class and from an instance', () => {
   assert.equal(eventIdOf(UserCreated), 'user.created');
   assert.equal(eventIdOf(new UserCreated('u')), 'user.created');
 });
 
-test.skip('eventIdOf falls back to the 0.1 instance getId when the class has no static one', () => {
+test('eventIdOf falls back to the 0.1 instance getId when the class has no static one', () => {
   assert.equal(eventIdOf(new LegacyPing()), 'legacy.ping');
   assert.equal(eventIdOf({ getId: () => 'plain.object' }), 'plain.object');
 });
 
-test.skip('eventIdOf prefers the static id when both exist', () => {
+test('eventIdOf prefers the static id when both exist', () => {
   assert.equal(eventIdOf(new BothIds()), 'both.static');
   assert.equal(eventIdOf(BothIds), 'both.static');
 });
 
-test.skip('eventIdOf throws a TypeError naming the class when there is no id', () => {
+test('eventIdOf throws a TypeError naming the class when there is no id', () => {
   assert.throws(
     () => eventIdOf(new NoId()),
     (error: unknown) => error instanceof TypeError && error.message.includes('NoId')
@@ -37,7 +37,7 @@ test.skip('eventIdOf throws a TypeError naming the class when there is no id', (
   );
 });
 
-test.skip('eventIdOf throws a TypeError when the id is empty or is not a string', () => {
+test('eventIdOf throws a TypeError when the id is empty or is not a string', () => {
   class EmptyId {
     static getId(): string {
       return '';
