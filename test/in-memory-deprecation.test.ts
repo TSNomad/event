@@ -76,7 +76,7 @@ function probe(source: string) {
   };
 }
 
-test.skip('the root export is deprecated where it is used, and the note names @tsnomad/node-integration', () => {
+test('the root export is deprecated where it is used, and the note names @tsnomad/node-integration', () => {
   const source = [
     "import { InMemoryEventStrategy } from '../dist/index.js';",
     'export const bus = new InMemoryEventStrategy();',
@@ -93,7 +93,7 @@ test.skip('the root export is deprecated where it is used, and the note names @t
   }
 });
 
-test.skip('the in-memory-event-strategy subpath is not deprecated, so a package that re-exports it passes on no warning', () => {
+test('the in-memory-event-strategy subpath is not deprecated, so a package that re-exports it passes on no warning', () => {
   const source = [
     "import { InMemoryEventStrategy } from '@tsnomad/event/in-memory-event-strategy';",
     'export const bus = new InMemoryEventStrategy();',
@@ -105,7 +105,7 @@ test.skip('the in-memory-event-strategy subpath is not deprecated, so a package 
   assert.deepEqual(result.deprecations, []);
 });
 
-test.skip('the root export is still the one class, usable as a value, a type and a base class', () => {
+test('the root export is still the one class, usable as a value, a type and a base class', () => {
   assert.equal(root.InMemoryEventStrategy, Direct);
   const source = [
     "import { InMemoryEventStrategy } from '../dist/index.js';",

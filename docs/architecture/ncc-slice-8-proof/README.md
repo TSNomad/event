@@ -38,3 +38,10 @@ test now checks the struck-through name at each use. One mutation put
 the tag in front of an import statement, where it means nothing, and it
 left the list. Another exported an anonymous subclass, which the build
 refused, so it now declares a named one.
+
+- `p16-mutations.py` and its log: 12 entries against the committed root
+  export in `src/index.ts`, three of them controls. Each of the nine
+  mutations breaks one guard, including a note whose package name is
+  not in backticks, so the tag ends at the `@`, and a root type of a
+  different shape. Every one is caught, and the log ends with zero
+  mismatches.

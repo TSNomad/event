@@ -1,0 +1,25 @@
+mutations in ncc-s08-b-event, tests in ncc-s08-b-event
+baseline exit=0
+C1-must-catch: neither root export is deprecated: KILLED exit=1 expect=killed OK
+    ✖ the root export is deprecated where it is used, and the note names @tsnomad/node-integration
+C2-must-survive: comment only: SURVIVED exit=0 expect=survive OK
+C3-must-refuse: syntax break: REFUSED (build failed: src/index.ts(32,13): error TS1005: ',' expected. | src/index.ts(32,63): error TS1005: ',' expected.)  expect=refuse
+P16-1 the value export is not deprecated: KILLED exit=1 expect=killed OK
+    ✖ the root export is deprecated where it is used, and the note names @tsnomad/node-integration
+P16-2 the type export is not deprecated: KILLED exit=1 expect=killed OK
+    ✖ the root export is deprecated where it is used, and the note names @tsnomad/node-integration
+P16-3 the notes do not name the new home: KILLED exit=1 expect=killed OK
+    ✖ the root export is deprecated where it is used, and the note names @tsnomad/node-integration
+P16-4 the package name is not in backticks, so the tag ends at it: KILLED exit=1 expect=killed OK
+    ✖ the root export is deprecated where it is used, and the note names @tsnomad/node-integration
+P16-5 the class itself carries the tag, so the subpath is deprecated too: KILLED exit=1 expect=killed OK
+    ✖ the in-memory-event-strategy subpath is not deprecated, so a package that re-exports it passes on no warning
+P16-6 the root exports a subclass, a second class: KILLED exit=1 expect=killed OK
+    ✖ the root export is still the one class, usable as a value, a type and a base class
+P16-7 the root drops the type, so it is no longer usable as one: KILLED exit=1 expect=killed OK
+    ✖ the root export is deprecated where it is used, and the note names @tsnomad/node-integration
+    ✖ the root export is still the one class, usable as a value, a type and a base class
+P16-8 the root type is a different shape: KILLED exit=1 expect=killed OK
+    ✖ the root export is still the one class, usable as a value, a type and a base class
+P16-9 the subpath leaves the exports map: KILLED exit=1 expect=killed OK
+mismatches=0
