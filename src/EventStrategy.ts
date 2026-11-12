@@ -61,8 +61,8 @@ export interface EventStrategy {
    * @param action - The listener, sync or async
    * @param priority - An integer. Lower runs first. Defaults to
    *   DEFAULT_PRIORITY.
-   * @throws TypeError when the id string is empty, or the class has no
-   *   static id, see `eventIdOf`
+   * @throws TypeError when the id string is empty, the class has no
+   *   static id, see `eventIdOf`, or the listener is not a function
    * @throws RangeError when the priority is not an integer
    */
   attach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;
@@ -74,7 +74,7 @@ export interface EventStrategy {
    * passes 10 to `remove_action`. Registrations at other priorities
    * stay. Detaching a listener that is not attached there does nothing.
    *
-   * @throws TypeError and RangeError on the same inputs as `attach`
+   * @throws TypeError and RangeError on the same ids and priorities as `attach`
    */
   detach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;
   detach<E extends Event = Event>(eventId: string, action: Listener<E>, priority?: number): void;

@@ -76,7 +76,9 @@ export class InMemoryEventStrategy implements EventStrategy {
   attach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;
   attach<E extends Event = Event>(eventId: string, action: Listener<E>, priority?: number): void;
   attach(event: EventClass | string, action: Listener<any>, priority?: number): void {
-    this.register(InMemoryEventStrategy.idOf(event), action, InMemoryEventStrategy.priorityOf(priority));
+    const id = InMemoryEventStrategy.idOf(event);
+    const at = InMemoryEventStrategy.priorityOf(priority);
+    this.register(id, InMemoryEventStrategy.checkedListener(action), at);
   }
 
   /** See EventStrategy.detach. */
@@ -270,6 +272,17 @@ export class InMemoryEventStrategy implements EventStrategy {
       throw new TypeError(`An event id must be a non-empty string, got ${InMemoryEventStrategy.describe(id)}`);
     }
     return id;
+  }
+
+  /**
+   * @throws TypeError when the listener is not a function, so the
+   *   mistake shows at attach time instead of as a broadcast failure
+   */
+  private static checkedListener(listener: unknown): Listener<any> {
+    if (typeof listener !== 'function') {
+      throw new TypeError(`A listener must be a function, got ${InMemoryEventStrategy.describe(listener)}`);
+    }
+    return listener as Listener<any>;
   }
 
   /**
