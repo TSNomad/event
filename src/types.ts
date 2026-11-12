@@ -1,32 +1,45 @@
 /**
  * TSNomad Events Types
  *
- * Event system following the observer pattern.
- * Events are classes with a getId() method that returns the event identifier.
+ * Event system following the observer pattern, the TypeScript
+ * counterpart of PHPNomad's event package. Events are classes with a
+ * static getId() that returns the event identifier.
  */
 
 /**
- * Base interface for all events.
- * Events must implement getId() to identify the event type.
+ * Marker interface for events, PHPNomad's
+ * `PHPNomad\Events\Interfaces\Event`.
+ *
+ * PHPNomad declares `public static function getId(): string` on this
+ * interface. A TypeScript interface cannot declare a static member, so
+ * the static id is carried by `EventClass` instead, and every event
+ * class declares it:
  *
  * @example
  * ```typescript
  * class UserCreated implements Event {
- *   constructor(public readonly userId: string) {}
- *
- *   getId(): string {
+ *   static getId(): string {
  *     return 'user.created';
  *   }
+ *
+ *   constructor(public readonly userId: string) {}
  * }
  * ```
+ *
+ * An event that only has the 0.1 instance method, `getId(): string`,
+ * still broadcasts, through `eventIdOf`. That path is deprecated and
+ * stays for 0.2.x.
  */
-export interface Event {
-  /**
-   * Returns the unique identifier for this event type.
-   * Convention: 'domain.action' e.g., 'milestone.created', 'worker.started'
-   */
+export interface Event {}
+
+/**
+ * An event class, the TypeScript stand-in for PHP's `Event::class`: a
+ * class whose instances are `E` and whose static `getId()` names the
+ * event.
+ */
+export type EventClass<E extends Event = Event> = (abstract new (...args: any[]) => E) & {
   getId(): string;
-}
+};
 
 /**
  * Handler that processes an event.
@@ -38,6 +51,71 @@ export interface CanHandle<E extends Event = Event> {
    * Can be sync or async.
    */
   handle(event: E): void | Promise<void>;
+}
+
+/**
+ * A class whose instances handle `E`. The loader resolves it from the
+ * container, with its `inject` list, and calls `handle()`, as
+ * PHPNomad's loader does with `$container->get($handler)->handle($event)`.
+ */
+export type HandlerClass<E extends Event = any> = abstract new (...args: any[]) => CanHandle<E>;
+
+/**
+ * One listener for an event: a handler class, or a plain function.
+ */
+export type ListenerEntry<E extends Event = any> = HandlerClass<E> | Listener<E>;
+
+/**
+ * PHPNomad's `PHPNomad\Events\Interfaces\HasListeners`. An initializer
+ * that listens for events returns a map from event id to one handler or
+ * a list of them.
+ *
+ * Where this differs from PHPNomad: the key is the event id, such as
+ * `[UserCreated.getId()]`, because a TypeScript object key cannot be a
+ * class.
+ */
+export interface HasListeners {
+  getListeners(): Record<string, ListenerEntry | readonly ListenerEntry[]>;
+}
+
+/**
+ * Turns the arguments a platform action passes into an event. Answering
+ * null or undefined raises no event, per event-binding (KB 45).
+ */
+export type ActionTransformer<E extends Event = Event> = (
+  ...args: any[]
+) => E | null | undefined | Promise<E | null | undefined>;
+
+/**
+ * One platform action bound to an event, PHPNomad's
+ * `['action' => ..., 'transformer' => ...]`. With no transformer, the
+ * strategy builds the event class from the action's arguments.
+ */
+export interface EventBindingAction<E extends Event = Event> {
+  action: string;
+  transformer?: ActionTransformer<E>;
+}
+
+/**
+ * One entry of `getEventBindings()`: an event class and the platform
+ * actions that raise it. An action given as a bare string has no
+ * transformer.
+ */
+export type EventBindingDefinition<E extends Event = any> = readonly [
+  EventClass<E>,
+  string | EventBindingAction<E> | readonly (string | EventBindingAction<E>)[],
+];
+
+/**
+ * PHPNomad's `PHPNomad\Events\Interfaces\HasEventBindings`. The loader
+ * hands each action to `ActionBindingStrategy.bindAction`.
+ *
+ * Where this differs from PHPNomad: the result is a list of
+ * `[EventClass, actions]` pairs, because a TypeScript object key cannot
+ * be a class.
+ */
+export interface HasEventBindings {
+  getEventBindings(): readonly EventBindingDefinition[];
 }
 
 /**
@@ -64,7 +142,10 @@ export interface Subscription {
 }
 
 /**
- * Event binding configuration for initializers.
+ * Event binding configuration for initializers, the 0.1 shape.
+ *
+ * @deprecated The loader still reads it as a plain listener. New code
+ * uses `HasListeners`.
  */
 export interface EventBinding<E extends Event = Event> {
   /**
@@ -112,66 +193,10 @@ export interface ExternalEventBinding<E extends Event = Event> {
 }
 
 /**
- * Strategy interface for binding external platform actions to nomadic events.
- * Platform-specific implementations (Node.js, browser, etc.) implement this.
- */
-export interface ActionBindingStrategy {
-  /**
-   * Register an external action binding.
-   * When the external action fires, the transformer creates a nomadic event
-   * which is then broadcast through the EventStrategy.
-   *
-   * @param eventId The nomadic event ID to produce
-   * @param action The external action to listen for (e.g., 'chokidar:change')
-   * @param transformer Function to transform external data into an event
-   */
-  bindAction<TInput, E extends Event>(
-    eventId: string,
-    action: string,
-    transformer: Transformer<TInput, E>
-  ): void;
-
-  /**
-   * Register a timer/interval that fires events periodically.
-   *
-   * @param name Unique name for this timer
-   * @param intervalMs Interval in milliseconds
-   * @param eventId The nomadic event ID to produce
-   * @param transformer Function to create the event on each tick
-   */
-  registerInterval<E extends Event>(
-    name: string,
-    intervalMs: number,
-    eventId: string,
-    transformer: () => E
-  ): void;
-
-  /**
-   * Unregister a timer/interval.
-   */
-  clearInterval(name: string): void;
-
-  /**
-   * Start watching a file or directory.
-   *
-   * @param path Path to watch
-   * @param options Watch options
-   */
-  watchPath(path: string, options?: WatchOptions): void;
-
-  /**
-   * Stop watching a path.
-   */
-  unwatchPath(path: string): void;
-
-  /**
-   * Stop all watchers and timers, cleanup resources.
-   */
-  dispose(): Promise<void>;
-}
-
-/**
  * Options for file/directory watching.
+ *
+ * @deprecated A Node platform concern that 0.1 put on
+ * ActionBindingStrategy. Kept as a type for 0.2.x.
  */
 export interface WatchOptions {
   /**

@@ -1,7 +1,7 @@
 {
   "name": "@tsnomad/event",
-  "version": "0.1.0",
-  "description": "Event strategy with listeners and parallel broadcast, the TypeScript counterpart to PHPNomad's event package",
+  "version": "0.2.0",
+  "description": "Event contracts with priority listeners and an in-memory strategy, the TypeScript counterpart to PHPNomad's event package",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -19,6 +19,14 @@
       "types": "./dist/EventStrategy.d.ts",
       "default": "./dist/EventStrategy.js"
     },
+    "./in-memory-event-strategy": {
+      "types": "./dist/InMemoryEventStrategy.d.ts",
+      "default": "./dist/InMemoryEventStrategy.js"
+    },
+    "./action-binding-strategy": {
+      "types": "./dist/ActionBindingStrategy.d.ts",
+      "default": "./dist/ActionBindingStrategy.js"
+    },
     "./types": {
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
@@ -32,11 +40,17 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "pretypecheck": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "pretest": "npm run build",
+    "test": "node --test"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "@tsnomad/di-container": "github:tsnomad/di-container"
   }
 }

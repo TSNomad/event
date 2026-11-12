@@ -1,170 +1,78 @@
 /**
- * TSNomad Event Strategy
+ * EventStrategy
  *
- * Instance-based event strategy following the observer pattern.
- * Supports both sync and async listeners with parallel execution.
- *
- * Usage:
- * ```typescript
- * class UserCreated implements Event {
- *   constructor(public readonly userId: string) {}
- *   getId(): string { return 'user.created'; }
- * }
- *
- * const events = new EventStrategy();
- *
- * events.addListener('user.created', (event) => {
- *   console.log('User created:', event.userId);
- * });
- *
- * await events.broadcast(new UserCreated('123'));
- * ```
+ * PHPNomad's `PHPNomad\Events\Interfaces\EventStrategy`: broadcast an
+ * event, attach and detach listeners with a priority. Implementations
+ * live elsewhere. `InMemoryEventStrategy` is the one this package ships.
  */
 
-import type { Event, Listener, Subscription } from './types.js';
+import { createToken } from '@tsnomad/di-container';
+import type { Event, EventClass, Listener, Subscription } from './types.js';
 
 /**
- * Event strategy that manages listeners and broadcasts events.
+ * The priority a listener gets when `attach` is called without one, as
+ * in the WordPress integration. Lower numbers run first.
  */
-export class EventStrategy {
-  /**
-   * Listeners keyed by event ID.
-   * Each event ID can have multiple listeners.
-   */
-  private listeners = new Map<string, Set<Listener<any>>>();
+export const DEFAULT_PRIORITY = 10;
 
+export interface EventStrategy {
   /**
-   * Adds a listener for a specific event type.
+   * Runs every listener attached to the event's id, one at a time, in
+   * priority order, lowest number first, and in attach order within one
+   * priority. Each listener's promise settles before the next starts.
    *
-   * @param eventId - The event ID to listen for
-   * @param listener - Function to call when event is broadcast
-   * @returns Subscription handle to unsubscribe
-   */
-  addListener<E extends Event>(
-    eventId: string,
-    listener: Listener<E>
-  ): Subscription {
-    let listenerSet = this.listeners.get(eventId);
-
-    if (!listenerSet) {
-      listenerSet = new Set();
-      this.listeners.set(eventId, listenerSet);
-    }
-
-    listenerSet.add(listener);
-
-    return {
-      unsubscribe: () => {
-        listenerSet?.delete(listener);
-        // Clean up empty sets
-        if (listenerSet?.size === 0) {
-          this.listeners.delete(eventId);
-        }
-      },
-    };
-  }
-
-  /**
-   * Removes a specific listener for an event.
+   * Every listener runs even when an earlier one throws. If any threw,
+   * the returned promise rejects with one AggregateError holding each
+   * error in the order the listeners ran (A30).
    *
-   * @param eventId - The event ID
-   * @param listener - The listener function to remove
-   */
-  removeListener<E extends Event>(
-    eventId: string,
-    listener: Listener<E>
-  ): void {
-    const listenerSet = this.listeners.get(eventId);
-    if (listenerSet) {
-      listenerSet.delete(listener);
-      if (listenerSet.size === 0) {
-        this.listeners.delete(eventId);
-      }
-    }
-  }
-
-  /**
-   * Broadcasts an event to all registered listeners.
-   * Listeners are called in parallel for performance.
-   * Errors in one listener don't prevent others from executing.
+   * The listeners that run are the ones attached when broadcast starts.
+   * An attach or detach made by a listener takes effect from the next
+   * broadcast.
    *
-   * @param event - The event to broadcast (must implement Event interface)
-   * @throws AggregateError if any listeners throw
-   */
-  async broadcast<E extends Event>(event: E): Promise<void> {
-    const eventId = event.getId();
-    const listenerSet = this.listeners.get(eventId);
-
-    if (!listenerSet || listenerSet.size === 0) {
-      return;
-    }
-
-    const errors: Error[] = [];
-    const promises: Promise<void>[] = [];
-
-    for (const listener of listenerSet) {
-      const promise = Promise.resolve()
-        .then(() => listener(event))
-        .catch((error: Error) => {
-          errors.push(error);
-        });
-
-      promises.push(promise);
-    }
-
-    await Promise.all(promises);
-
-    if (errors.length > 0) {
-      throw new AggregateError(
-        errors,
-        `${errors.length} listener(s) threw during broadcast of '${eventId}'`
-      );
-    }
-  }
-
-  /**
-   * Checks if any listeners are registered for an event.
+   * Where this differs from PHPNomad: async (A26), and errors are
+   * collected instead of stopping at the first one.
    *
-   * @param eventId - The event ID to check
-   * @returns True if at least one listener is registered
+   * @throws TypeError, through the returned promise, when the event has
+   *   no id, see `eventIdOf`
    */
-  hasListeners(eventId: string): boolean {
-    const listenerSet = this.listeners.get(eventId);
-    return listenerSet !== undefined && listenerSet.size > 0;
-  }
+  broadcast<E extends Event>(event: E): Promise<void>;
 
   /**
-   * Gets the count of listeners for an event.
+   * Attaches a listener to an event, by class or by id.
    *
-   * @param eventId - The event ID to check
-   * @returns Number of registered listeners
-   */
-  listenerCount(eventId: string): number {
-    return this.listeners.get(eventId)?.size ?? 0;
-  }
-
-  /**
-   * Removes all listeners for a specific event.
+   * Attaching the same listener to the same event at the same priority
+   * twice leaves one registration. The same listener at two priorities
+   * runs once at each.
    *
-   * @param eventId - The event ID to clear
+   * @param event - An event class, read through its static getId(), or an id
+   * @param action - The listener, sync or async
+   * @param priority - Lower runs first. Defaults to DEFAULT_PRIORITY.
    */
-  clearListeners(eventId: string): void {
-    this.listeners.delete(eventId);
-  }
+  attach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;
+  attach<E extends Event = Event>(eventId: string, action: Listener<E>, priority?: number): void;
 
   /**
-   * Removes all listeners for all events.
+   * Detaches a listener. With a priority, only the registration at that
+   * priority goes. Without one, the listener goes at every priority.
+   * Detaching a listener that is not attached does nothing.
    */
-  clearAllListeners(): void {
-    this.listeners.clear();
-  }
+  detach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;
+  detach<E extends Event = Event>(eventId: string, action: Listener<E>, priority?: number): void;
 
   /**
-   * Gets all event IDs that have listeners.
+   * The 0.1 way to listen: attach at DEFAULT_PRIORITY and get a handle
+   * that detaches.
    *
-   * @returns Array of event IDs
+   * @deprecated Use attach. It stays on the interface for 0.2.x because
+   * @tsnomad/loader 0.1 calls it through this type, and every consumer
+   * builds that loader on install. Slice 7 moves the loader to attach.
    */
-  getEventIds(): string[] {
-    return Array.from(this.listeners.keys());
-  }
+  addListener<E extends Event>(eventId: string, listener: Listener<E>): Subscription;
 }
+
+/**
+ * Token for the EventStrategy interface, so code reads
+ * `container.get(EventStrategy)` as PHP reads
+ * `$container->get(EventStrategy::class)`.
+ */
+export const EventStrategy = createToken<EventStrategy>('tsnomad/event/EventStrategy');
