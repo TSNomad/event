@@ -58,7 +58,17 @@ export class InMemoryEventStrategy implements EventStrategy {
   /**
    * Attaches at DEFAULT_PRIORITY and returns a handle whose
    * `unsubscribe()` detaches the listener at DEFAULT_PRIORITY only, as
-   * `detach` with no priority does. Calling it again does nothing.
+   * `detach` with no priority does.
+   *
+   * The handle points at the registration this call made, or found when
+   * the listener was already attached there. Two calls for one listener
+   * give two handles to one registration, and either handle removes it.
+   * Once that registration is gone, by any handle, `detach` or
+   * `removeListener`, every handle to it does nothing, even after the
+   * same listener is added again.
+   *
+   * @throws TypeError when the id is empty, as every 0.1 method that
+   *   takes an id does
    *
    * @deprecated Use attach and detach.
    */
@@ -72,6 +82,8 @@ export class InMemoryEventStrategy implements EventStrategy {
   /**
    * Detaches a listener from an event at every priority.
    *
+   * @throws TypeError when the id is empty
+   *
    * @deprecated Use detach.
    */
   removeListener<E extends Event>(eventId: string, listener: Listener<E>): void {
@@ -82,6 +94,8 @@ export class InMemoryEventStrategy implements EventStrategy {
 
   /**
    * Whether any listener is attached to the event id, at any priority.
+   *
+   * @throws TypeError when the id is empty
    *
    * @deprecated Kept for 0.2.x.
    */
@@ -95,6 +109,8 @@ export class InMemoryEventStrategy implements EventStrategy {
    * How many registrations the event id has, counting one per listener
    * per priority.
    *
+   * @throws TypeError when the id is empty
+   *
    * @deprecated Kept for 0.2.x.
    */
   listenerCount(eventId: string): number {
@@ -105,6 +121,8 @@ export class InMemoryEventStrategy implements EventStrategy {
 
   /**
    * Detaches every listener from one event id.
+   *
+   * @throws TypeError when the id is empty
    *
    * @deprecated Kept for 0.2.x.
    */

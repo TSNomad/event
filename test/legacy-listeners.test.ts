@@ -35,11 +35,13 @@ test.skip('unsubscribe on the handle addListener returns detaches that listener'
   const subscription = events.addListener('legacy.ping', () => {
     calls += 1;
   });
+  await events.broadcast(new LegacyPing());
+  assert.equal(calls, 1, 'the listener was attached');
 
   subscription.unsubscribe();
   await events.broadcast(new LegacyPing());
 
-  assert.equal(calls, 0);
+  assert.equal(calls, 1, 'the listener did not run again');
   assert.equal(events.hasListeners('legacy.ping'), false);
 });
 
@@ -81,11 +83,13 @@ test.skip('removeListener detaches a listener', async () => {
     calls += 1;
   };
   events.addListener('legacy.ping', listener);
+  await events.broadcast(new LegacyPing());
+  assert.equal(calls, 1, 'the listener was attached');
 
   events.removeListener('legacy.ping', listener);
   await events.broadcast(new LegacyPing());
 
-  assert.equal(calls, 0);
+  assert.equal(calls, 1, 'the listener did not run again');
 });
 
 test.skip('hasListeners, listenerCount and getEventIds report attached listeners at any priority', () => {
@@ -127,4 +131,34 @@ test.skip('clearListeners empties one event and clearAllListeners empties every 
   await events.broadcast(new LegacyPing());
   assert.deepEqual(seen, ['ping']);
   assert.deepEqual(events.getEventIds(), []);
+});
+
+test.skip('two handles to one registration: either removes it, and neither removes a later one', async () => {
+  const events = new InMemoryEventStrategy();
+  let calls = 0;
+  const listener = () => {
+    calls += 1;
+  };
+  const first = events.addListener('legacy.ping', listener);
+  const second = events.addListener('legacy.ping', listener);
+  assert.equal(events.listenerCount('legacy.ping'), 1, 'the second add found the first registration');
+
+  first.unsubscribe();
+  assert.equal(events.hasListeners('legacy.ping'), false, 'one handle removed the shared registration');
+
+  events.addListener('legacy.ping', listener);
+  second.unsubscribe();
+  await events.broadcast(new LegacyPing());
+
+  assert.equal(calls, 1, 'a handle to a removed registration left the new one attached');
+});
+
+test.skip('the 0.1 methods that take an id reject an empty one with a TypeError, as attach does', () => {
+  const events = new InMemoryEventStrategy();
+
+  assert.throws(() => events.addListener('', () => {}), TypeError);
+  assert.throws(() => events.removeListener('', () => {}), TypeError);
+  assert.throws(() => events.hasListeners(''), TypeError);
+  assert.throws(() => events.listenerCount(''), TypeError);
+  assert.throws(() => events.clearListeners(''), TypeError);
 });

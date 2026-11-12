@@ -37,6 +37,11 @@ test.skip('a 0.1 factory binding under the token resolves a strategy that broadc
 test.skip('the documented class binding gives the token and the class one shared bus', async () => {
   const container = new Container();
   container.bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy);
+  assert.equal(
+    container.has(EventStrategy),
+    true,
+    'needs the container packet: @tsnomad/di-container with bind(concrete, ...abstracts) implemented'
+  );
 
   const byToken = await container.get(EventStrategy);
   const byClass = await container.get(InMemoryEventStrategy);

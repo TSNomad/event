@@ -25,8 +25,11 @@ export interface EventStrategy {
    * the returned promise rejects with one AggregateError holding each
    * error, unchanged, in the order the listeners ran. Its message names
    * the count and the event id. The strategy never runs a listener
-   * twice for one broadcast and never retries. Work that must survive a
-   * failure belongs behind a durable queue, not in a re-broadcast.
+   * twice for one broadcast and never retries. A caller that broadcasts
+   * the same event again after a failure runs every listener again,
+   * including the ones that succeeded, so listeners must tolerate that,
+   * as `CanHandle.handle` describes. Work that must survive a failure
+   * belongs behind a durable queue.
    *
    * The listeners that run are the ones attached when broadcast starts.
    * An attach or detach made by a listener takes effect from the next
@@ -72,8 +75,11 @@ export interface EventStrategy {
 
   /**
    * The 0.1 way to listen: attach at DEFAULT_PRIORITY and get a handle
-   * whose `unsubscribe()` detaches the listener at DEFAULT_PRIORITY
-   * only. A second call does nothing.
+   * whose `unsubscribe()` removes that registration only. Once the
+   * registration is gone, by this handle or any other way, the handle
+   * does nothing. See `InMemoryEventStrategy.addListener`.
+   *
+   * @throws TypeError when the id is empty
    *
    * @deprecated Use attach. It stays on the interface for 0.2.x because
    * @tsnomad/loader 0.1 calls it through this type, and every consumer

@@ -1,14 +1,15 @@
 # One mutation per @ts-expect-error directive in test/event-type-safety.ts, plus three controls.
 T = 'src/types.ts'
 E = 'src/EventStrategy.ts'
-TRANSFORMER = "export type ActionTransformer<E extends Event = Event> = (...args: any[]) => E | null | Promise<E | null>;"
+A = 'src/ActionBindingStrategy.ts'
+TRANSFORMER = "export type ActionTransformer<E extends Event = Event> = (\n  ...args: any[]\n) => NotThenable<E> | null | Promise<NotThenable<E> | null>;"
+ANSWER = ") => NotThenable<E> | null | Promise<NotThenable<E> | null>;"
 ATTACH = "  attach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;"
 MUTATIONS = [
-  ('TC1-must-catch: transformers answer anything', T, TRANSFORMER,
-   "export type ActionTransformer<E extends Event = Event> = (...args: any[]) => unknown;",
-   ['must answer the bound event class', 'forgets to return']),
+  ('TC1-must-catch: transformers answer anything', T, ANSWER, ") => unknown;",
+   ['must answer the bound event class', 'a transformer that forgets to return', 'with a string id', 'nor with the Event type']),
   ('TC2-must-survive: comment only', T, TRANSFORMER, "// harmless\n" + TRANSFORMER, 'survive'),
-  ('TC3-must-refuse: syntax break', T, TRANSFORMER, TRANSFORMER.replace('(...args', '((...args'), 'refuse'),
+  ('TC3-must-refuse: syntax break', T, ANSWER, ") => NotThenable<E> | null | Promise<NotThenable<E> | null>;;(", 'refuse'),
   ('TE1 EventClass needs no static getId', T,
    "export type EventClass<E extends Event = Event> = (abstract new (...args: any[]) => E) & {\n  getId(): string;\n};",
    "export type EventClass<E extends Event = Event> = (abstract new (...args: any[]) => E) & {};",
@@ -17,8 +18,14 @@ MUTATIONS = [
    ["listener's event type must match"]),
   ('TE3 priority is untyped', E, ATTACH, ATTACH.replace('priority?: number', 'priority?: any'),
    ['priority is a number']),
-  ('TE4 a transformer may answer any event', T, TRANSFORMER, TRANSFORMER.replace('=> E | null | Promise<E | null>', '=> Event | null | Promise<Event | null>'),
+  ('TE4 a transformer may answer any event', T, ANSWER, ") => NotThenable<Event> | null | Promise<NotThenable<Event> | null>;",
    ['must answer the bound event class']),
-  ('TE5 a transformer may forget to return', T, TRANSFORMER, TRANSFORMER.replace('=> E | null |', '=> E | null | void |'),
-   ['forgets to return']),
+  ('TE5 a sync transformer may forget to return', T, ANSWER, ") => NotThenable<E> | null | void | Promise<NotThenable<E> | null>;",
+   ['a transformer that forgets to return']),
+  ('TE6 a promise counts as an event', T, "export type NotThenable<E> = E & { readonly then?: never };", "export type NotThenable<E> = E;",
+   ['with a string id', 'nor with the Event type']),
+  ('TE7 a string id may omit the transformer', A,
+   "  bindAction<E extends Event = Event>(eventId: string, action: string, transformer: ActionTransformer<E>): void;",
+   "  bindAction<E extends Event = Event>(eventId: string, action: string, transformer?: ActionTransformer<E>): void;",
+   ['a string id needs a transformer']),
 ]

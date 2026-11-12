@@ -1,9 +1,11 @@
-baseline typecheck exit=0 errors=0 directives=5
-TC1-must-catch: transformers answer anything: KILLED unused=[74, 77] expect=[74, 77] OK
+baseline typecheck exit=0 errors=0 directives=8
+TC1-must-catch: transformers answer anything: KILLED unused=[74, 77, 89, 92] expect=[74, 77, 89, 92] OK
     unused: the transformer must answer the bound event class, or null
     unused: a transformer that forgets to return does not compile
+    unused: an async transformer that forgets to return does not compile, with a string id
+    unused: nor with the Event type spelled out
 TC2-must-survive: comment only: SURVIVED expect=survive OK
-TC3-must-refuse: syntax break: REFUSED (other errors: [('src/types.ts', '86', 'TS1005')])  expect=refuse
+TC3-must-refuse: syntax break: REFUSED (other errors: [('src/types.ts', '114', 'TS1005'), ('src/types.ts', '114', 'TS1005')])  expect=refuse
 TE1 EventClass needs no static getId: KILLED unused=[60] expect=[60] OK
     unused: a class without a static getId is not an EventClass
 TE2 the listener type is not tied to the class: KILLED unused=[63] expect=[63] OK
@@ -12,8 +14,13 @@ TE3 priority is untyped: KILLED unused=[66] expect=[66] OK
     unused: priority is a number
 TE4 a transformer may answer any event: KILLED unused=[74] expect=[74] OK
     unused: the transformer must answer the bound event class, or null
-TE5 a transformer may forget to return: KILLED unused=[77] expect=[77] OK
+TE5 a sync transformer may forget to return: KILLED unused=[77] expect=[77] OK
     unused: a transformer that forgets to return does not compile
+TE6 a promise counts as an event: KILLED unused=[89, 92] expect=[89, 92] OK
+    unused: an async transformer that forgets to return does not compile, with a string id
+    unused: nor with the Event type spelled out
+TE7 a string id may omit the transformer: KILLED unused=[86] expect=[86] OK
+    unused: a string id needs a transformer, because an id cannot build an event
 restored typecheck exit=0
 directives never left unused: none
 mismatches=0

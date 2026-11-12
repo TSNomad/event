@@ -79,6 +79,19 @@ export function eventChecks(events: EventStrategy, bindings: ActionBindingStrate
     void new UserCreated(id);
   });
 
+  // bindAction by a 0.1 string id takes a transformer, with an explicit event type or Event.
+  bindings.bindAction<UserCreated>('user.created', 'customer.created', (id: string) => new UserCreated(id));
+  bindings.bindAction('order.placed', 'order.updated', async () => null);
+
+  // @ts-expect-error a string id needs a transformer, because an id cannot build an event
+  bindings.bindAction('order.placed', 'order.placed');
+
+  // @ts-expect-error an async transformer that forgets to return does not compile, with a string id
+  bindings.bindAction('order.placed', 'order.updated', async () => {});
+
+  // @ts-expect-error nor with the Event type spelled out
+  bindings.bindAction<Event>('order.placed', 'order.updated', async () => {});
+
   // The documented wiring compiles: one shared bus under the token and the class.
   new Container().bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy);
 

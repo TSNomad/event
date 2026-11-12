@@ -49,6 +49,13 @@ export interface CanHandle<E extends Event = Event> {
   /**
    * Handles the event.
    * Can be sync or async.
+   *
+   * A handler may run again for the same event. A broadcast that
+   * rejects goes back to the platform, and a platform that reruns the
+   * action reruns every listener, including the ones that succeeded.
+   * Work that must happen once keys its idempotency on facts from the
+   * event, such as the order id and the event id, never on the time or
+   * a random value.
    */
   handle(event: E): void | Promise<void>;
 }
@@ -72,18 +79,32 @@ export type ListenerEntry<E extends Event = any> = HandlerClass<E> | Listener<E>
  *
  * Where this differs from PHPNomad: the key is the event id, such as
  * `[UserCreated.getId()]`, because a TypeScript object key cannot be a
- * class.
+ * class. `HasEventBindings` uses `[EventClass, actions]` pairs instead,
+ * because a binding needs the class itself to build the event. A
+ * listener needs only the id, and an id-keyed record is the shape the
+ * 0.1 loader already reads.
  */
 export interface HasListeners {
   getListeners(): Record<string, ListenerEntry | readonly ListenerEntry[]>;
 }
 
 /**
- * Turns the arguments a platform action passes into an event. Answering
- * null raises no event. A transformer must answer on every path, so one
- * that forgets to return does not compile.
+ * An event that is not a promise or other thenable. `Event` is a marker
+ * with no members, so without this a promise would count as an event.
  */
-export type ActionTransformer<E extends Event = Event> = (...args: any[]) => E | null | Promise<E | null>;
+export type NotThenable<E> = E & { readonly then?: never };
+
+/**
+ * Turns the arguments a platform action passes into an event. Answering
+ * null raises no event. A transformer must answer an event or null on
+ * every path, sync or async, so one that forgets to return does not
+ * compile. An implementation that receives any other answer at run
+ * time, such as `undefined` from JavaScript, throws a TypeError naming
+ * the action.
+ */
+export type ActionTransformer<E extends Event = Event> = (
+  ...args: any[]
+) => NotThenable<E> | null | Promise<NotThenable<E> | null>;
 
 /**
  * One platform action bound to an event, PHPNomad's
@@ -119,7 +140,8 @@ export interface HasEventBindings {
 
 /**
  * Listener function that handles an event.
- * Can be sync or async.
+ * Can be sync or async. A listener may run again for the same event,
+ * as `CanHandle.handle` describes.
  */
 export type Listener<E extends Event> = (event: E) => void | Promise<void>;
 
@@ -135,7 +157,8 @@ export type Transformer<TInput, E extends Event> = (input: TInput) => E;
  */
 export interface Subscription {
   /**
-   * Removes the listener from the strategy.
+   * Removes the registration this handle points at, if it still
+   * exists. See `InMemoryEventStrategy.addListener`.
    */
   unsubscribe(): void;
 }

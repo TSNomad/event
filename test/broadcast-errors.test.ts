@@ -1,6 +1,6 @@
 /**
  * Acceptance tests: a failing listener never stops the others, and the
- * failures come back together as one AggregateError (A30). See
+ * failures come back together as one AggregateError. See
  * docs/architecture/ncc-slice-6.md.
  *
  * Marked `test.skip` while InMemoryEventStrategy is a stub.
@@ -16,6 +16,7 @@ test.skip('every listener runs when earlier ones throw or reject, then one Aggre
   const ran: string[] = [];
   const syncError = new Error('sync failure');
   const asyncError = new TypeError('async failure');
+  const lateError = new RangeError('late failure');
 
   events.attach(UserCreated, () => {
     ran.push('throws');
@@ -25,10 +26,14 @@ test.skip('every listener runs when earlier ones throw or reject, then one Aggre
     ran.push('rejects');
     await tick(1);
     throw asyncError;
-  }, 2);
+  }, 5);
   events.attach(UserCreated, () => {
     ran.push('outbox');
-  }, 3);
+  }, 7);
+  events.attach(UserCreated, () => {
+    ran.push('late');
+    throw lateError;
+  }, 9);
 
   let caught: unknown;
   try {
@@ -37,10 +42,10 @@ test.skip('every listener runs when earlier ones throw or reject, then one Aggre
     caught = error;
   }
 
-  assert.deepEqual(ran, ['throws', 'rejects', 'outbox'], 'the listener after two failures still ran');
+  assert.deepEqual(ran, ['throws', 'rejects', 'outbox', 'late'], 'every listener ran once, past the failures');
   assert.ok(caught instanceof AggregateError, 'broadcast rejects with an AggregateError');
-  assert.deepEqual(caught.errors, [syncError, asyncError]);
-  assert.match(caught.message, /\b2\b/, 'the message names the count');
+  assert.deepEqual(caught.errors, [syncError, asyncError, lateError]);
+  assert.match(caught.message, /\b3\b/, 'the message names the count, which no priority here shares');
   assert.match(caught.message, /user\.created/, 'the message names the event id');
 });
 

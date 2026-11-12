@@ -8,7 +8,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
-import { UserCreated } from './fixtures.ts';
+import { UserCreated, NoId } from './fixtures.ts';
 
 test.skip('detach removes a listener so the next broadcast skips it', async () => {
   const events = new InMemoryEventStrategy();
@@ -84,6 +84,15 @@ test.skip('attach and detach reject an empty event id with a TypeError', () => {
 
   assert.throws(() => events.attach('', () => {}), TypeError);
   assert.throws(() => events.detach('', () => {}), TypeError);
+});
+
+test.skip('detach by a class with no static id throws a TypeError naming the class', () => {
+  const events = new InMemoryEventStrategy();
+
+  assert.throws(
+    () => events.detach(NoId as never, () => {}),
+    (error: unknown) => error instanceof TypeError && error.message.includes('NoId')
+  );
 });
 
 test.skip('attach and detach reject a priority that is not an integer with a RangeError', () => {

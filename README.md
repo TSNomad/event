@@ -48,11 +48,17 @@ const events = await container.get(EventStrategy);
 - The 0.1 listener methods, such as `addListener` and `listenerCount`,
   still work on `InMemoryEventStrategy` and are deprecated. Only
   `addListener` stays on the interface.
-- `ActionBindingStrategy` has one method, `bindAction`, whose transformer
-  is optional and may answer null. The timer and watcher methods are no
-  longer on the interface.
+- `ActionBindingStrategy` has one method, `bindAction`. Bound to an
+  event class, its transformer is optional. Bound to an id, as in 0.1, it
+  is required. A transformer answers an event or null, and an
+  implementation throws on any other answer. The timer and watcher
+  methods are no longer on the interface.
 - Broadcast runs listeners one at a time instead of in parallel.
-- An empty event id, or a priority that is not an integer, throws.
+- An empty event id, or a priority that is not an integer, throws, from
+  the 0.1 methods too.
+- A listener may run again for the same event when a broadcast is
+  repeated after a failure, so work that must happen once needs an
+  idempotency key built from the event.
 
 ## Where this differs from PHPNomad
 

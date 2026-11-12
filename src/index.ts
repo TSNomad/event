@@ -18,6 +18,7 @@ export type {
   ListenerEntry,
   HasListeners,
   ActionTransformer,
+  NotThenable,
   EventBindingAction,
   EventBindingDefinition,
   HasEventBindings,
