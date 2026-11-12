@@ -40,7 +40,8 @@ test.skip('every listener runs when earlier ones throw or reject, then one Aggre
   assert.deepEqual(ran, ['throws', 'rejects', 'outbox'], 'the listener after two failures still ran');
   assert.ok(caught instanceof AggregateError, 'broadcast rejects with an AggregateError');
   assert.deepEqual(caught.errors, [syncError, asyncError]);
-  assert.match(caught.message, /2 listener\(s\) threw during broadcast of 'user\.created'/);
+  assert.match(caught.message, /\b2\b/, 'the message names the count');
+  assert.match(caught.message, /user\.created/, 'the message names the event id');
 });
 
 test.skip('the AggregateError comes only after the last listener has settled', async () => {

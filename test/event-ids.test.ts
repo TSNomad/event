@@ -37,7 +37,7 @@ test.skip('eventIdOf throws a TypeError naming the class when there is no id', (
   );
 });
 
-test.skip('eventIdOf throws a TypeError when the id is not a non-empty string', () => {
+test.skip('eventIdOf throws a TypeError when the id is empty or is not a string', () => {
   class EmptyId {
     static getId(): string {
       return '';
@@ -68,7 +68,7 @@ test.skip('a 0.1 event with only an instance id still reaches its listeners', as
 test.skip('broadcast of an event with no id rejects with a TypeError and runs no listener', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
-  events.attach('', () => {
+  events.attach('undefined', () => {
     calls += 1;
   });
 

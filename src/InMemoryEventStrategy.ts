@@ -2,8 +2,7 @@
  * InMemoryEventStrategy
  *
  * An EventStrategy that keeps its listeners in memory, in one process.
- * It is the 0.1 `EventStrategy` class, renamed now that `EventStrategy`
- * is the interface, and given priorities and one-at-a-time broadcast.
+ * It also carries the deprecated 0.1 listener methods.
  *
  * Usage:
  * ```typescript
@@ -19,7 +18,11 @@
  * await events.broadcast(new UserCreated('123'));
  * ```
  *
- * The 0.1 listener methods stay, deprecated, for 0.2.x.
+ * In a container, bind it under the interface token and its own class,
+ * so a `get` of either returns the same instance:
+ * `container.bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy)`.
+ * Without its class in that call, `get(InMemoryEventStrategy)` autowires
+ * a second, separate bus.
  */
 
 import type { Event, EventClass, Listener, Subscription } from './types.js';
@@ -54,7 +57,8 @@ export class InMemoryEventStrategy implements EventStrategy {
 
   /**
    * Attaches at DEFAULT_PRIORITY and returns a handle whose
-   * `unsubscribe()` detaches that registration.
+   * `unsubscribe()` detaches the listener at DEFAULT_PRIORITY only, as
+   * `detach` with no priority does. Calling it again does nothing.
    *
    * @deprecated Use attach and detach.
    */

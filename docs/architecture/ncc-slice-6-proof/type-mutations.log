@@ -1,0 +1,19 @@
+baseline typecheck exit=0 errors=0 directives=5
+TC1-must-catch: transformers answer anything: KILLED unused=[74, 77] expect=[74, 77] OK
+    unused: the transformer must answer the bound event class, or null
+    unused: a transformer that forgets to return does not compile
+TC2-must-survive: comment only: SURVIVED expect=survive OK
+TC3-must-refuse: syntax break: REFUSED (other errors: [('src/types.ts', '86', 'TS1005')])  expect=refuse
+TE1 EventClass needs no static getId: KILLED unused=[60] expect=[60] OK
+    unused: a class without a static getId is not an EventClass
+TE2 the listener type is not tied to the class: KILLED unused=[63] expect=[63] OK
+    unused: the listener's event type must match the event class
+TE3 priority is untyped: KILLED unused=[66] expect=[66] OK
+    unused: priority is a number
+TE4 a transformer may answer any event: KILLED unused=[74] expect=[74] OK
+    unused: the transformer must answer the bound event class, or null
+TE5 a transformer may forget to return: KILLED unused=[77] expect=[77] OK
+    unused: a transformer that forgets to return does not compile
+restored typecheck exit=0
+directives never left unused: none
+mismatches=0

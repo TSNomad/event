@@ -32,23 +32,32 @@ await events.broadcast(new UserCreated('123'));
 ```
 
 Code that depends on the contract resolves `EventStrategy`, a token with
-the interface's name: `await container.get(EventStrategy)`.
+the interface's name. Bind the in-memory strategy under the token and its
+class, so both resolve to one bus:
+
+```ts
+container.bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy);
+const events = await container.get(EventStrategy);
+```
 
 ## Upgrading from 0.1
 
-`EventStrategy` is now the interface. Write `new InMemoryEventStrategy()`
-where 0.1 code wrote `new EventStrategy()`. The 0.1 methods, such as
-`addListener`, still work on `InMemoryEventStrategy` and are deprecated.
+- Write `new InMemoryEventStrategy()` where 0.1 code wrote
+  `new EventStrategy()`. `EventStrategy` is now the interface and its
+  token.
+- The 0.1 listener methods, such as `addListener` and `listenerCount`,
+  still work on `InMemoryEventStrategy` and are deprecated. Only
+  `addListener` stays on the interface.
+- `ActionBindingStrategy` has one method, `bindAction`, whose transformer
+  is optional and may answer null. The timer and watcher methods are no
+  longer on the interface.
+- Broadcast runs listeners one at a time instead of in parallel.
+- An empty event id, or a priority that is not an integer, throws.
 
 ## Where this differs from PHPNomad
 
-- `broadcast` returns a promise and listeners may be async.
-- Every listener runs even when one throws, then one `AggregateError`
-  carries every error.
-- `HasListeners` keys by event id, and `HasEventBindings` returns
-  `[EventClass, actions]` pairs, because an object key cannot be a class.
-- An interface is a typed token with the interface's name, because
-  TypeScript erases interfaces.
+The architecture note, `docs/architecture/ncc-slice-6.md`, keeps the
+list of differences and the reason for each.
 
 ## Extracted 2026-09-17
 

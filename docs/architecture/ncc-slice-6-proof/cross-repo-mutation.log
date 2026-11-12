@@ -1,0 +1,9 @@
+X1 (cross-repo): the container's class bind gives each abstract its own instance.
+Mutation in the scratch container's class bind: `if (!shared) {` became `if (Date.now() > 0) {`
+(the find text was present once). The scratch container rebuilt cleanly (exit 0).
+Event suite run against it:
+✖ the documented class binding gives the token and the class one shared bus
+event suite exit=1
+Restored the scratch container and reran the event suite:
+ℹ pass 43
+ℹ fail 0

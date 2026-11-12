@@ -6,7 +6,8 @@
  * every other line must keep compiling.
  */
 
-import type { EventStrategy } from '../dist/EventStrategy.js';
+import { Container } from '@tsnomad/di-container';
+import { EventStrategy } from '../dist/EventStrategy.js';
 import type { ActionBindingStrategy } from '../dist/ActionBindingStrategy.js';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import type {
@@ -72,6 +73,14 @@ export function eventChecks(events: EventStrategy, bindings: ActionBindingStrate
 
   // @ts-expect-error the transformer must answer the bound event class, or null
   bindings.bindAction(UserCreated, 'customer.created', () => new OrderPlaced(1));
+
+  // @ts-expect-error a transformer that forgets to return does not compile
+  bindings.bindAction(UserCreated, 'customer.created', (id: string) => {
+    void new UserCreated(id);
+  });
+
+  // The documented wiring compiles: one shared bus under the token and the class.
+  new Container().bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy);
 
   void new Listens();
   void new Binds();

@@ -185,7 +185,7 @@ test.skip('a listener detached during a broadcast still runs in that broadcast, 
   };
   events.attach(UserCreated, () => {
     seen.push('first');
-    events.detach(UserCreated, second);
+    events.detach(UserCreated, second, 2);
   }, 1);
   events.attach(UserCreated, second, 2);
 

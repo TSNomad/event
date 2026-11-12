@@ -80,11 +80,10 @@ export interface HasListeners {
 
 /**
  * Turns the arguments a platform action passes into an event. Answering
- * null or undefined raises no event, per event-binding (KB 45).
+ * null raises no event. A transformer must answer on every path, so one
+ * that forgets to return does not compile.
  */
-export type ActionTransformer<E extends Event = Event> = (
-  ...args: any[]
-) => E | null | undefined | Promise<E | null | undefined>;
+export type ActionTransformer<E extends Event = Event> = (...args: any[]) => E | null | Promise<E | null>;
 
 /**
  * One platform action bound to an event, PHPNomad's

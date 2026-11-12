@@ -27,6 +27,10 @@
       "types": "./dist/ActionBindingStrategy.d.ts",
       "default": "./dist/ActionBindingStrategy.js"
     },
+    "./event-id-of": {
+      "types": "./dist/eventIdOf.d.ts",
+      "default": "./dist/eventIdOf.js"
+    },
     "./types": {
       "types": "./dist/types.d.ts",
       "default": "./dist/types.js"
@@ -46,11 +50,11 @@
     "pretest": "npm run build",
     "test": "node --test"
   },
+  "dependencies": {
+    "@tsnomad/di-container": "github:tsnomad/di-container#feat/ncc-s06-container-event"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
-  },
-  "dependencies": {
-    "@tsnomad/di-container": "github:tsnomad/di-container"
   }
 }

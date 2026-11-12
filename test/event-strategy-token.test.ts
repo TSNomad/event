@@ -1,9 +1,8 @@
 /**
- * Acceptance test, integration shape (KB 568): the EventStrategy token
- * resolves an InMemoryEventStrategy through a real container, and a
- * broadcast through the resolved instance reaches a listener. Uses the
- * container's 0.1 factory binding, which already exists, so this test
- * needs only the event package's stubs filled in.
+ * Acceptance tests, integration shape: the event package wired through
+ * a real container, the way an application wires it. The class-path
+ * `bind` comes from @tsnomad/di-container 0.2.0, so the second test
+ * needs both the container's packet and this package's packet.
  *
  * Marked `test.skip` while InMemoryEventStrategy is a stub.
  */
@@ -16,24 +15,36 @@ import { ActionBindingStrategy } from '../dist/ActionBindingStrategy.js';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import { UserCreated } from './fixtures.ts';
 
-test('the interface tokens carry namespaced names', () => {
-  assert.equal(EventStrategy.name, 'tsnomad/event/EventStrategy');
-  assert.equal(ActionBindingStrategy.name, 'tsnomad/event/ActionBindingStrategy');
+test('the interface tokens carry the interface names, so they share bindings with the loader 0.1 string tokens', () => {
+  assert.equal(EventStrategy.name, 'EventStrategy');
+  assert.equal(ActionBindingStrategy.name, 'ActionBindingStrategy');
 });
 
-test.skip('the EventStrategy token resolves a shared InMemoryEventStrategy that broadcasts', async () => {
+test.skip('a 0.1 factory binding under the token resolves a strategy that broadcasts', async () => {
   const container = new Container();
-  container.bind(EventStrategy, () => new InMemoryEventStrategy());
+  container.bind('EventStrategy', () => new InMemoryEventStrategy());
 
   const events = await container.get(EventStrategy);
-  const again = await container.get(EventStrategy);
   const seen: string[] = [];
   events.attach(UserCreated, (event) => {
     seen.push(event.userId);
   });
-  await again.broadcast(new UserCreated('via-token'));
+  await events.broadcast(new UserCreated('via-token'));
 
-  assert.ok(events instanceof InMemoryEventStrategy);
-  assert.equal(events, again);
   assert.deepEqual(seen, ['via-token']);
+});
+
+test.skip('the documented class binding gives the token and the class one shared bus', async () => {
+  const container = new Container();
+  container.bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy);
+
+  const byToken = await container.get(EventStrategy);
+  const byClass = await container.get(InMemoryEventStrategy);
+  const seen: string[] = [];
+  byClass.attach(UserCreated, (event) => {
+    seen.push(event.userId);
+  });
+  await byToken.broadcast(new UserCreated('shared'));
+
+  assert.deepEqual(seen, ['shared'], 'a listener attached through the class hears a broadcast through the token');
 });

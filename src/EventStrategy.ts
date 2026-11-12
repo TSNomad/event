@@ -23,13 +23,16 @@ export interface EventStrategy {
    *
    * Every listener runs even when an earlier one throws. If any threw,
    * the returned promise rejects with one AggregateError holding each
-   * error in the order the listeners ran (A30).
+   * error, unchanged, in the order the listeners ran. Its message names
+   * the count and the event id. The strategy never runs a listener
+   * twice for one broadcast and never retries. Work that must survive a
+   * failure belongs behind a durable queue, not in a re-broadcast.
    *
    * The listeners that run are the ones attached when broadcast starts.
    * An attach or detach made by a listener takes effect from the next
    * broadcast.
    *
-   * Where this differs from PHPNomad: async (A26), and errors are
+   * Where this differs from PHPNomad: it is async, and errors are
    * collected instead of stopping at the first one.
    *
    * @throws TypeError, through the returned promise, when the event has
@@ -47,26 +50,34 @@ export interface EventStrategy {
    * @param event - An event class, read through its static getId(), or
    *   an id string, used as given
    * @param action - The listener, sync or async
-   * @param priority - Lower runs first. Defaults to DEFAULT_PRIORITY.
+   * @param priority - An integer. Lower runs first. Defaults to
+   *   DEFAULT_PRIORITY.
+   * @throws TypeError when the id string is empty, or the class has no
+   *   static id, see `eventIdOf`
+   * @throws RangeError when the priority is not an integer
    */
   attach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;
   attach<E extends Event = Event>(eventId: string, action: Listener<E>, priority?: number): void;
 
   /**
-   * Detaches a listener. With a priority, only the registration at that
-   * priority goes. Without one, the listener goes at every priority.
-   * Detaching a listener that is not attached does nothing.
+   * Detaches the listener's registration at one priority, which
+   * defaults to DEFAULT_PRIORITY, as PHPNomad's WordPress strategy
+   * passes 10 to `remove_action`. Registrations at other priorities
+   * stay. Detaching a listener that is not attached there does nothing.
+   *
+   * @throws TypeError and RangeError on the same inputs as `attach`
    */
   detach<E extends Event>(event: EventClass<E>, action: Listener<NoInfer<E>>, priority?: number): void;
   detach<E extends Event = Event>(eventId: string, action: Listener<E>, priority?: number): void;
 
   /**
    * The 0.1 way to listen: attach at DEFAULT_PRIORITY and get a handle
-   * that detaches.
+   * whose `unsubscribe()` detaches the listener at DEFAULT_PRIORITY
+   * only. A second call does nothing.
    *
    * @deprecated Use attach. It stays on the interface for 0.2.x because
    * @tsnomad/loader 0.1 calls it through this type, and every consumer
-   * builds that loader on install. Slice 7 moves the loader to attach.
+   * builds that loader on install. It leaves once the loader calls attach.
    */
   addListener<E extends Event>(eventId: string, listener: Listener<E>): Subscription;
 }
@@ -74,6 +85,12 @@ export interface EventStrategy {
 /**
  * Token for the EventStrategy interface, so code reads
  * `container.get(EventStrategy)` as PHP reads
- * `$container->get(EventStrategy::class)`.
+ * `$container->get(EventStrategy::class)`. Its name is the interface
+ * name, so it shares one binding with the string token 'EventStrategy'
+ * that @tsnomad/loader 0.1 binds.
+ *
+ * Bind the in-memory strategy under both the token and its class, so
+ * code that asks for either gets the same bus:
+ * `container.bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy)`.
  */
-export const EventStrategy = createToken<EventStrategy>('tsnomad/event/EventStrategy');
+export const EventStrategy = createToken<EventStrategy>('EventStrategy');

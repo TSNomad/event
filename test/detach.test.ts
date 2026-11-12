@@ -30,19 +30,20 @@ test.skip('detach removes a listener so the next broadcast skips it', async () =
 
 test.skip('detach with a priority removes only the registration at that priority', async () => {
   const events = new InMemoryEventStrategy();
-  const order: number[] = [];
-  let calls = 0;
+  const order: string[] = [];
   const listener = () => {
-    calls += 1;
-    order.push(calls);
+    order.push('listener');
   };
   events.attach(UserCreated, listener, 1);
+  events.attach(UserCreated, () => {
+    order.push('marker');
+  }, 5);
   events.attach(UserCreated, listener, 9);
 
   events.detach(UserCreated, listener, 1);
   await events.broadcast(new UserCreated('u'));
 
-  assert.equal(calls, 1, 'the priority 9 registration is still attached');
+  assert.deepEqual(order, ['marker', 'listener'], 'the priority 9 registration survived, the priority 1 one did not');
 });
 
 test.skip('detach with a priority the listener is not at leaves it attached', async () => {
@@ -59,20 +60,40 @@ test.skip('detach with a priority the listener is not at leaves it attached', as
   assert.equal(calls, 1);
 });
 
-test.skip('detach without a priority removes the listener at every priority', async () => {
+test.skip('detach without a priority removes the registration at the default priority only', async () => {
   const events = new InMemoryEventStrategy();
-  let calls = 0;
-  const listener = () => {
-    calls += 1;
+  const order: string[] = [];
+  const listener = (event: UserCreated) => {
+    order.push(event.userId);
   };
+  events.attach(UserCreated, listener);
   events.attach(UserCreated, listener, 1);
-  events.attach(UserCreated, listener, 9);
   events.attach('user.created', listener, 20);
+  events.attach(UserCreated, () => {
+    order.push('marker');
+  }, 10);
 
   events.detach('user.created', listener);
   await events.broadcast(new UserCreated('u'));
 
-  assert.equal(calls, 0);
+  assert.deepEqual(order, ['u', 'marker', 'u'], 'priorities 1 and 20 stay, priority 10 went');
+});
+
+test.skip('attach and detach reject an empty event id with a TypeError', () => {
+  const events = new InMemoryEventStrategy();
+
+  assert.throws(() => events.attach('', () => {}), TypeError);
+  assert.throws(() => events.detach('', () => {}), TypeError);
+});
+
+test.skip('attach and detach reject a priority that is not an integer with a RangeError', () => {
+  const events = new InMemoryEventStrategy();
+
+  for (const priority of [Number.NaN, 1.5, Number.POSITIVE_INFINITY]) {
+    assert.throws(() => events.attach(UserCreated, () => {}, priority), RangeError, `attach at ${priority}`);
+    assert.throws(() => events.detach(UserCreated, () => {}, priority), RangeError, `detach at ${priority}`);
+  }
+  assert.doesNotThrow(() => events.attach(UserCreated, () => {}, -3), 'a negative integer is a priority');
 });
 
 test.skip('detaching a listener that is not attached does nothing', async () => {

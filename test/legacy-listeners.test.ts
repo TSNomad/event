@@ -43,6 +43,37 @@ test.skip('unsubscribe on the handle addListener returns detaches that listener'
   assert.equal(events.hasListeners('legacy.ping'), false);
 });
 
+test.skip('unsubscribe leaves the same listener attached at another priority', async () => {
+  const events = new InMemoryEventStrategy();
+  let calls = 0;
+  const listener = () => {
+    calls += 1;
+  };
+  const subscription = events.addListener('legacy.ping', listener);
+  events.attach('legacy.ping', listener, 3);
+
+  subscription.unsubscribe();
+  await events.broadcast(new LegacyPing());
+
+  assert.equal(calls, 1, 'the priority 3 registration still runs');
+});
+
+test.skip('a second unsubscribe on a spent handle does not remove a later registration', async () => {
+  const events = new InMemoryEventStrategy();
+  let calls = 0;
+  const listener = () => {
+    calls += 1;
+  };
+  const first = events.addListener('legacy.ping', listener);
+  first.unsubscribe();
+  events.addListener('legacy.ping', listener);
+
+  first.unsubscribe();
+  await events.broadcast(new LegacyPing());
+
+  assert.equal(calls, 1);
+});
+
 test.skip('removeListener detaches a listener', async () => {
   const events = new InMemoryEventStrategy();
   let calls = 0;
@@ -72,8 +103,8 @@ test.skip('hasListeners, listenerCount and getEventIds report attached listeners
   assert.equal(events.listenerCount('user.created'), 2, 'one registration per listener per priority');
   assert.deepEqual([...events.getEventIds()].sort(), ['legacy.ping', 'user.created']);
 
-  events.detach(UserCreated, listener);
-  assert.equal(events.hasListeners('user.created'), false);
+  events.removeListener('user.created', listener);
+  assert.equal(events.hasListeners('user.created'), false, 'removeListener takes the listener off at every priority');
   assert.deepEqual(events.getEventIds(), ['legacy.ping'], 'an id with no listeners left is not reported');
 });
 
