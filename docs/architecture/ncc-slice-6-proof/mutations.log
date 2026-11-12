@@ -1,9 +1,10 @@
-mutations in ., tests in .
+mutations in ncc-s06-proof-event, tests in ncc-s06-proof-event
 baseline exit=0
 C1-must-catch: broadcast runs nothing: KILLED exit=1 expect=killed OK
     ✖ a 0.1 event with only an instance id still reaches its listeners
     ✖ a 0.1 factory binding under the token resolves a strategy that broadcasts
     ✖ a broadcast reaches only the listeners of its own event id
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ a listener attached by event class receives the broadcast event
     ✖ a listener attached by id string receives the event whose static id matches
     ✖ a listener attached during a broadcast runs from the next broadcast
@@ -31,7 +32,7 @@ C1-must-catch: broadcast runs nothing: KILLED exit=1 expect=killed OK
     ✖ unsubscribe leaves the same listener attached at another priority
     ✖ unsubscribe on the handle addListener returns detaches that listener
 C2-must-survive: comment only: SURVIVED exit=0 expect=survive OK
-C3-must-refuse: syntax break: REFUSED (build failed: src/InMemoryEventStrategy.ts(14,28): error TS1005: ']' expected.)  expect=refuse
+C3-must-refuse: syntax break: REFUSED (build failed: src/InMemoryEventStrategy.ts(18,28): error TS1005: ']' expected.)  expect=refuse
 E1 no priority sort: KILLED exit=1 expect=killed OK
     ✖ addListener attaches at the default priority
     ✖ detach without a priority removes the registration at the default priority only
@@ -60,6 +61,7 @@ E6 broadcast does not await listeners: KILLED exit=1 expect=killed OK
     ✖ the AggregateError comes only after the last listener has settled
 E7 no dedupe at one priority: KILLED exit=1 expect=killed OK
     ✖ the same listener at the same priority is registered once
+    ✖ the second handle alone removes the live registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
 E8 dedupe ignores priority: KILLED exit=1 expect=killed OK
     ✖ detach with a priority removes only the registration at that priority
@@ -110,10 +112,12 @@ E19 detach unknown throws: KILLED exit=1 expect=killed OK
     ✖ detaching a listener that is not attached does nothing
 I2 no instance fallback: KILLED exit=1 expect=killed OK
     ✖ a 0.1 event with only an instance id still reaches its listeners
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ a second unsubscribe on a spent handle does not remove a later registration
     ✖ clearListeners empties one event and clearAllListeners empties every event
     ✖ eventIdOf falls back to the 0.1 instance getId when the class has no static one
     ✖ removeListener detaches a listener
+    ✖ the second handle alone removes the live registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
     ✖ unsubscribe leaves the same listener attached at another priority
     ✖ unsubscribe on the handle addListener returns detaches that listener
@@ -121,6 +125,7 @@ I3 instance id preferred over static: KILLED exit=1 expect=killed OK
     ✖ eventIdOf prefers the static id when both exist
 I4 missing id returns empty string: KILLED exit=1 expect=killed OK
     ✖ broadcast of an event with no id rejects with a TypeError and runs no listener
+    ✖ broadcast rejects an event class, a number and a string with a TypeError, and runs no listener
     ✖ eventIdOf throws a TypeError naming the class when there is no id
 I5 missing static id on class returns empty: KILLED exit=1 expect=killed OK
     ✖ attach with an event class that has no static id throws a TypeError naming the class
@@ -132,14 +137,17 @@ I8 error message omits class name: KILLED exit=1 expect=killed OK
     ✖ eventIdOf throws a TypeError naming the class when there is no id
 L1 addListener at priority 0: KILLED exit=1 expect=killed OK
     ✖ addListener attaches at the default priority
+    ✖ the second handle alone removes the live registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
     ✖ unsubscribe leaves the same listener attached at another priority
     ✖ unsubscribe on the handle addListener returns detaches that listener
 L2 unsubscribe does nothing: KILLED exit=1 expect=killed OK
+    ✖ the second handle alone removes the live registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
     ✖ unsubscribe leaves the same listener attached at another priority
     ✖ unsubscribe on the handle addListener returns detaches that listener
 L3 removeListener does nothing: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ hasListeners, listenerCount and getEventIds report attached listeners at any priority
     ✖ removeListener detaches a listener
 L4 listenerCount counts listeners, not registrations: KILLED exit=1 expect=killed OK
@@ -147,10 +155,13 @@ L4 listenerCount counts listeners, not registrations: KILLED exit=1 expect=kille
 L5 detach leaves empty ids reported: KILLED exit=1 expect=killed OK
     ✖ hasListeners, listenerCount and getEventIds report attached listeners at any priority
 L6 clearListeners does nothing: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ clearListeners empties one event and clearAllListeners empties every event
 L7 clearAllListeners does nothing: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ clearListeners empties one event and clearAllListeners empties every event
 E16 detach does nothing: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ a listener detached during a broadcast still runs in that broadcast, and not after
     ✖ detach removes a listener so the next broadcast skips it
     ✖ detach with a priority removes only the registration at that priority
@@ -200,9 +211,11 @@ V3 a finite fraction is accepted as a priority: KILLED exit=1 expect=killed OK
 V4 detach without a priority removes every priority: KILLED exit=1 expect=killed OK
     ✖ detach without a priority removes the registration at the default priority only
 V5 a spent handle removes the listener again: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ a second unsubscribe on a spent handle does not remove a later registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
 V6 unsubscribe removes every priority: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ a second unsubscribe on a spent handle does not remove a later registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
     ✖ unsubscribe leaves the same listener attached at another priority
@@ -214,6 +227,7 @@ V8 an empty AggregateError is thrown: KILLED exit=1 expect=killed OK
     ✖ a broadcast reaches only the listeners of its own event id
     ✖ a broadcast where every listener succeeds resolves
     ✖ a broadcast with no listeners resolves
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ a listener attached by event class receives the broadcast event
     ✖ a listener attached by id string receives the event whose static id matches
     ✖ a listener attached during a broadcast runs from the next broadcast
@@ -234,6 +248,7 @@ V8 an empty AggregateError is thrown: KILLED exit=1 expect=killed OK
     ✖ the documented class binding gives the token and the class one shared bus
     ✖ the same listener at the same priority is registered once
     ✖ the same listener at two priorities runs once at each
+    ✖ the second handle alone removes the live registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
     ✖ unsubscribe leaves the same listener attached at another priority
     ✖ unsubscribe on the handle addListener returns detaches that listener
@@ -255,8 +270,10 @@ E14c message names the last priority instead of the count: KILLED exit=1 expect=
 E20 a failing listener is run again once: KILLED exit=1 expect=killed OK
     ✖ every listener runs when earlier ones throw or reject, then one AggregateError carries every error in run order
 H1 a handle removes by listener and remembers only that it ran: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
     ✖ two handles to one registration: either removes it, and neither removes a later one
 H2 the second add of a listener makes a handle to nothing: KILLED exit=1 expect=killed OK
+    ✖ the second handle alone removes the live registration
     ✖ two handles to one registration: either removes it, and neither removes a later one
     ✖ unsubscribe leaves the same listener attached at another priority
     ✖ unsubscribe on the handle addListener returns detaches that listener
@@ -270,4 +287,12 @@ V16 clearListeners accepts an empty id: KILLED exit=1 expect=killed OK
     ✖ the 0.1 methods that take an id reject an empty one with a TypeError, as attach does
 V17 detach reads a class id without checking it: KILLED exit=1 expect=killed OK
     ✖ detach by a class with no static id throws a TypeError naming the class
+W1 a handle removes by listener and priority, not by registration: KILLED exit=1 expect=killed OK
+    ✖ a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners
+    ✖ a second unsubscribe on a spent handle does not remove a later registration
+    ✖ two handles to one registration: either removes it, and neither removes a later one
+W2 a call that found the registration gets a handle that does nothing: KILLED exit=1 expect=killed OK
+    ✖ the second handle alone removes the live registration
+W3 broadcast takes an event class and reads its static id: KILLED exit=1 expect=killed OK
+    ✖ broadcast rejects an event class, a number and a string with a TypeError, and runs no listener
 mismatches=0

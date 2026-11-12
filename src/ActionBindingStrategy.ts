@@ -17,7 +17,10 @@ export interface ActionBindingStrategy {
    * null raises no event. PHPNomad's WordPress integration skips any
    * falsy answer. This one accepts only an event or null, and throws a
    * TypeError naming the action for any other answer, so a JavaScript
-   * transformer that forgets to return fails where it can be seen. With
+   * transformer that forgets to return fails where it can be seen. It
+   * also throws a TypeError naming the action when the answer's id, read
+   * through `eventIdOf`, is not the id of the bound event, because a
+   * list of bindings cannot check that at compile time. With
    * no transformer, the strategy builds the event class from the
    * action's arguments, as that integration does with
    * `new $eventClass(...$args)`.
@@ -30,8 +33,10 @@ export interface ActionBindingStrategy {
    *   rejects with its AggregateError both reach the platform's caller.
    * - When the platform ignores what the callback returns, as an
    *   EventEmitter or a timer does, nothing would receive the
-   *   rejection. The callback catches it and logs it at error level
-   *   with the action name, the event id and the error, then returns.
+   *   rejection. The callback catches it and logs it through the
+   *   container's `LoggerStrategy`, from `@tsnomad/logger`, at error
+   *   level, with the context keys `action`, `eventId` and `error`, then
+   *   returns.
    *
    * The strategy never drops a failure without logging it and never
    * retries. A platform that reruns a failed action reruns every

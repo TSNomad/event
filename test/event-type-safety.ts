@@ -13,6 +13,7 @@ import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
 import type {
   CanHandle,
   Event,
+  EventBindingDefinition,
   HasEventBindings,
   HasListeners,
 } from '../dist/types.js';
@@ -91,6 +92,37 @@ export function eventChecks(events: EventStrategy, bindings: ActionBindingStrate
 
   // @ts-expect-error nor with the Event type spelled out
   bindings.bindAction<Event>('order.placed', 'order.updated', async () => {});
+
+  // A plain list of bindings checks every transformer against Event.
+  const plain: readonly EventBindingDefinition[] = [
+    [UserCreated, { action: 'customer.created', transformer: (id: string) => new UserCreated(id) }],
+    [OrderPlaced, 'order.placed'],
+  ];
+  void plain;
+
+  // @ts-expect-error a transformer in a plain list that forgets to return does not compile
+  const forgets: EventBindingDefinition = [UserCreated, { action: 'customer.created', transformer: (id: string) => void id }];
+  void forgets;
+
+  // broadcast takes an event instance, including one typed by a generic.
+  void events.broadcast(new UserCreated('u'));
+  const forward = <E extends Event>(make: () => E) => events.broadcast(make());
+  void forward(() => new OrderPlaced(1));
+
+  // @ts-expect-error broadcast does not take an event class
+  void events.broadcast(UserCreated);
+
+  // @ts-expect-error broadcast does not take a function
+  void events.broadcast(() => new UserCreated('u'));
+
+  // @ts-expect-error broadcast does not take a number
+  void events.broadcast(42);
+
+  // @ts-expect-error broadcast does not take a string
+  void events.broadcast('user.created');
+
+  // @ts-expect-error broadcast does not take a promise of an event
+  void events.broadcast(Promise.resolve(new UserCreated('u')));
 
   // The documented wiring compiles: one shared bus under the token and the class.
   new Container().bind(InMemoryEventStrategy, EventStrategy, InMemoryEventStrategy);

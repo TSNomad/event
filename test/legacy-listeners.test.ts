@@ -162,3 +162,42 @@ test.skip('the 0.1 methods that take an id reject an empty one with a TypeError,
   assert.throws(() => events.listenerCount(''), TypeError);
   assert.throws(() => events.clearListeners(''), TypeError);
 });
+
+test.skip('the second handle alone removes the live registration', async () => {
+  const events = new InMemoryEventStrategy();
+  let calls = 0;
+  const listener = () => {
+    calls += 1;
+  };
+  events.addListener('legacy.ping', listener);
+  const second = events.addListener('legacy.ping', listener);
+
+  second.unsubscribe();
+  await events.broadcast(new LegacyPing());
+
+  assert.equal(events.hasListeners('legacy.ping'), false, 'a handle from a call that found the registration removes it');
+  assert.equal(calls, 0);
+});
+
+test.skip('a handle goes stale when its registration is removed by detach, removeListener, clearListeners or clearAllListeners', async () => {
+  const removals: Record<string, (events: InMemoryEventStrategy, listener: () => void) => void> = {
+    detach: (events, listener) => events.detach('legacy.ping', listener),
+    removeListener: (events, listener) => events.removeListener('legacy.ping', listener),
+    clearListeners: (events) => events.clearListeners('legacy.ping'),
+    clearAllListeners: (events) => events.clearAllListeners(),
+  };
+  for (const [name, remove] of Object.entries(removals)) {
+    const events = new InMemoryEventStrategy();
+    let calls = 0;
+    const listener = () => {
+      calls += 1;
+    };
+    const stale = events.addListener('legacy.ping', listener);
+    remove(events, listener);
+    events.addListener('legacy.ping', listener);
+    stale.unsubscribe();
+    await events.broadcast(new LegacyPing());
+
+    assert.equal(calls, 1, `after ${name}, the stale handle left the new registration attached`);
+  }
+});

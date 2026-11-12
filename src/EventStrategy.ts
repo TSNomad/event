@@ -7,7 +7,7 @@
  */
 
 import { createToken } from '@tsnomad/di-container';
-import type { Event, EventClass, Listener, Subscription } from './types.js';
+import type { Event, EventClass, EventInstance, Listener, Subscription } from './types.js';
 
 /**
  * The priority a listener gets when `attach` is called without one, as
@@ -23,8 +23,12 @@ export interface EventStrategy {
    *
    * Every listener runs even when an earlier one throws. If any threw,
    * the returned promise rejects with one AggregateError holding each
-   * error, unchanged, in the order the listeners ran. Its message names
-   * the count and the event id. The strategy never runs a listener
+   * error, unchanged, in the order the listeners ran. Its message is
+   * the 0.1 text, `N listener(s) threw during broadcast of 'id'`. A
+   * listener whose promise never settles stalls the broadcast and every
+   * listener after it, because there is no per-listener timeout. A
+   * listener that waits on something slow gives it its own timeout.
+   * The strategy never runs a listener
    * twice for one broadcast and never retries. A caller that broadcasts
    * the same event again after a failure runs every listener again,
    * including the ones that succeeded, so listeners must tolerate that,
@@ -39,9 +43,10 @@ export interface EventStrategy {
    * collected instead of stopping at the first one.
    *
    * @throws TypeError, through the returned promise, when the event has
-   *   no id, see `eventIdOf`
+   *   no id, see `eventIdOf`, or when it is an event class instead of an
+   *   instance of one
    */
-  broadcast<E extends Event>(event: E): Promise<void>;
+  broadcast<E extends Event>(event: EventInstance<E>): Promise<void>;
 
   /**
    * Attaches a listener to an event, by class or by id.
@@ -75,9 +80,10 @@ export interface EventStrategy {
 
   /**
    * The 0.1 way to listen: attach at DEFAULT_PRIORITY and get a handle
-   * whose `unsubscribe()` removes that registration only. Once the
-   * registration is gone, by this handle or any other way, the handle
-   * does nothing. See `InMemoryEventStrategy.addListener`.
+   * whose `unsubscribe()` removes the registration this call made, or
+   * found when the listener was already attached there. Once that
+   * registration is gone, the handle does nothing. See
+   * `InMemoryEventStrategy.addListener`.
    *
    * @throws TypeError when the id is empty
    *

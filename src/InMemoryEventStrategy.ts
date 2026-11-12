@@ -25,12 +25,12 @@
  * a second, separate bus.
  */
 
-import type { Event, EventClass, Listener, Subscription } from './types.js';
+import type { Event, EventClass, EventInstance, Listener, Subscription } from './types.js';
 import type { EventStrategy } from './EventStrategy.js';
 
 export class InMemoryEventStrategy implements EventStrategy {
   /** See EventStrategy.broadcast. */
-  async broadcast<E extends Event>(event: E): Promise<void> {
+  async broadcast<E extends Event>(event: EventInstance<E>): Promise<void> {
     // Stub: not implemented yet. See docs/architecture/ncc-slice-6.md.
     void event;
   }
@@ -63,9 +63,10 @@ export class InMemoryEventStrategy implements EventStrategy {
    * The handle points at the registration this call made, or found when
    * the listener was already attached there. Two calls for one listener
    * give two handles to one registration, and either handle removes it.
-   * Once that registration is gone, by any handle, `detach` or
-   * `removeListener`, every handle to it does nothing, even after the
-   * same listener is added again.
+   * Once that registration is gone, by any handle, `detach`,
+   * `removeListener`, `clearListeners` or `clearAllListeners`, every
+   * handle to it does nothing, even after the same listener is added
+   * again.
    *
    * @throws TypeError when the id is empty, as every 0.1 method that
    *   takes an id does

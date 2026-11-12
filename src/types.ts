@@ -50,9 +50,10 @@ export interface CanHandle<E extends Event = Event> {
    * Handles the event.
    * Can be sync or async.
    *
-   * A handler may run again for the same event. A broadcast that
-   * rejects goes back to the platform, and a platform that reruns the
-   * action reruns every listener, including the ones that succeeded.
+   * A handler may run again for the same event. A caller that
+   * broadcasts the event again after a failure, or a platform that
+   * reruns a failed action, reruns every listener, including the ones
+   * that succeeded.
    * Work that must happen once keys its idempotency on facts from the
    * event, such as the order id and the event id, never on the time or
    * a random value.
@@ -83,6 +84,9 @@ export type ListenerEntry<E extends Event = any> = HandlerClass<E> | Listener<E>
  * because a binding needs the class itself to build the event. A
  * listener needs only the id, and an id-keyed record is the shape the
  * 0.1 loader already reads.
+ *
+ * This package only declares the initializer shapes, `HasListeners`
+ * and `HasEventBindings`. The next @tsnomad/loader release reads them.
  */
 export interface HasListeners {
   getListeners(): Record<string, ListenerEntry | readonly ListenerEntry[]>;
@@ -93,6 +97,18 @@ export interface HasListeners {
  * with no members, so without this a promise would count as an event.
  */
 export type NotThenable<E> = E & { readonly then?: never };
+
+/**
+ * What `broadcast` takes: an event instance. A number, a string, a
+ * function, an event class and a promise all fail to compile, because
+ * `Event` alone has no members and would accept each of them. A value
+ * whose type is a generic `E extends Event` still fits, so code that
+ * forwards events it did not build keeps compiling.
+ */
+export type EventInstance<E extends Event> = E & object & {
+  readonly then?: never;
+  readonly call?: never;
+};
 
 /**
  * Turns the arguments a platform action passes into an event. Answering
@@ -120,8 +136,14 @@ export interface EventBindingAction<E extends Event = Event> {
  * One entry of `getEventBindings()`: an event class and the platform
  * actions that raise it. An action given as a bare string has no
  * transformer.
+ *
+ * In a list typed `EventBindingDefinition[]`, each transformer is
+ * checked against `Event`, so one that forgets to return does not
+ * compile, but the list cannot tie each transformer to its own class.
+ * The strategy checks that at run time: see
+ * `ActionBindingStrategy.bindAction`.
  */
-export type EventBindingDefinition<E extends Event = any> = readonly [
+export type EventBindingDefinition<E extends Event = Event> = readonly [
   EventClass<E>,
   string | EventBindingAction<E> | readonly (string | EventBindingAction<E>)[],
 ];

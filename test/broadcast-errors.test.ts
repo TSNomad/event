@@ -9,7 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { InMemoryEventStrategy } from '../dist/InMemoryEventStrategy.js';
-import { UserCreated, tick } from './fixtures.ts';
+import { UserCreated, OrderPlaced, tick } from './fixtures.ts';
 
 test.skip('every listener runs when earlier ones throw or reject, then one AggregateError carries every error in run order', async () => {
   const events = new InMemoryEventStrategy();
@@ -45,8 +45,7 @@ test.skip('every listener runs when earlier ones throw or reject, then one Aggre
   assert.deepEqual(ran, ['throws', 'rejects', 'outbox', 'late'], 'every listener ran once, past the failures');
   assert.ok(caught instanceof AggregateError, 'broadcast rejects with an AggregateError');
   assert.deepEqual(caught.errors, [syncError, asyncError, lateError]);
-  assert.match(caught.message, /\b3\b/, 'the message names the count, which no priority here shares');
-  assert.match(caught.message, /user\.created/, 'the message names the event id');
+  assert.equal(caught.message, "3 listener(s) threw during broadcast of 'user.created'", 'the 0.1 message, with the count and the id');
 });
 
 test.skip('the AggregateError comes only after the last listener has settled', async () => {
@@ -87,4 +86,24 @@ test.skip('a broadcast where every listener succeeds resolves', async () => {
   });
 
   await assert.doesNotReject(() => events.broadcast(new UserCreated('u')));
+});
+
+test.skip('broadcast rejects an event class, a number and a string with a TypeError, and runs no listener', async () => {
+  const events = new InMemoryEventStrategy();
+  let calls = 0;
+  events.attach(UserCreated, () => {
+    calls += 1;
+  });
+  events.attach(OrderPlaced, () => {
+    calls += 1;
+  });
+
+  await assert.rejects(
+    () => events.broadcast(UserCreated as never),
+    (error: unknown) => error instanceof TypeError && /UserCreated/.test(error.message),
+    'a class is refused, naming it, even though it carries a static id'
+  );
+  await assert.rejects(() => events.broadcast(42 as never), TypeError);
+  await assert.rejects(() => events.broadcast('order.placed' as never), TypeError);
+  assert.equal(calls, 0);
 });

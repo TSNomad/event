@@ -1,5 +1,5 @@
 # The event suite scored against mutations in the scratch container it installs.
-# Run: mutate.py <scratch-container-clone> cross-repo-mutations.py <scratch-event-clone>
+# Run: mutate.py <proof-di> event-cross-repo.py <proof-event>
 MUTATIONS = [
  ('C1-must-catch: class bind stores nothing', 'src/Container.ts',
   'for (const key of keys) this.bindings.set(key, { factory, singleton: true, concrete: first });', '', 'killed'),

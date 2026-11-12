@@ -302,4 +302,20 @@ MUTATIONS = [('C1-must-catch: broadcast runs nothing',
   '  detach(event: EventClass | string, action: Listener<any>, priority: number = DEFAULT_PRIORITY): void {\n'
   "    const id = typeof event === 'string' ? InMemoryEventStrategy.idOf(event) : String((event as { getId?: () => string }).getId?.() ?? "
   "'');",
+  'killed'),
+ ('W1 a handle removes by listener and priority, not by registration',
+  'src/InMemoryEventStrategy.ts',
+  '        const kept = list.filter((r) => r !== reg);',
+  '        const kept = list.filter((r) => !(r.listener === reg.listener && r.priority === reg.priority));',
+  'killed'),
+ ('W2 a call that found the registration gets a handle that does nothing',
+  'src/InMemoryEventStrategy.ts',
+  '    this.attach(eventId, listener, DEFAULT_PRIORITY);\n    const reg = ',
+  '    const had = this.regs.get(eventId)?.some((r) => r.listener === listener && r.priority === DEFAULT_PRIORITY);\n'
+  '    this.attach(eventId, listener, DEFAULT_PRIORITY);\n    if (had) return { unsubscribe: () => {} };\n    const reg = ',
+  'killed'),
+ ('W3 broadcast takes an event class and reads its static id',
+  'src/InMemoryEventStrategy.ts',
+  "    if (typeof event === 'function') {\n      const name = (event as unknown as { name: string }).name;\n",
+  "    if (typeof event === 'function' && false) {\n      const name = (event as unknown as { name: string }).name;\n",
   'killed')]
