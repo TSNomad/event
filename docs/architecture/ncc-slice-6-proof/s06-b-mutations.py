@@ -1,0 +1,53 @@
+# Lane s06-b: proof for the review's open findings in the event package
+# and for the EventStrategy autowire test, run against this branch.
+# Run: python3 docs/architecture/ncc-slice-6-proof/mutate.py . docs/architecture/ncc-slice-6-proof/s06-b-mutations.py
+# The A entries change the container this package installs, in
+# node_modules, so they score the autowire test against the real
+# container. The harness restores each file after its run.
+CONTAINER = 'node_modules/@tsnomad/di-container/dist/Container.js'
+MUTATIONS = [
+ ('C1-must-catch attach registers nothing', 'src/InMemoryEventStrategy.ts',
+  '    this.register(id, InMemoryEventStrategy.checkedListener(action), at);',
+  '    InMemoryEventStrategy.checkedListener(action);', 'killed'),
+ ('C2-must-survive comment only', 'src/InMemoryEventStrategy.ts',
+  '  private static checkedListener(listener: unknown): Listener<any> {',
+  '  // control\n  private static checkedListener(listener: unknown): Listener<any> {', 'survive'),
+ ('C3-must-refuse syntax error must be refused', 'src/InMemoryEventStrategy.ts',
+  '  private static checkedListener(listener: unknown): Listener<any> {',
+  '  private static checkedListener(listener: unknown): Listener<any> {{', 'refuse'),
+ ('L1 attach takes any listener', 'src/InMemoryEventStrategy.ts',
+  "    if (typeof listener !== 'function') {\n      throw new TypeError(`A listener must be a function",
+  "    if (typeof listener === 'symbol') {\n      throw new TypeError(`A listener must be a function", 'killed'),
+ ('L2 listener checked after it is registered', 'src/InMemoryEventStrategy.ts',
+  '    this.register(id, InMemoryEventStrategy.checkedListener(action), at);',
+  '    this.register(id, action, at);\n    InMemoryEventStrategy.checkedListener(action);', 'killed'),
+ ('I1 an inherited static id always wins, the 0.1 order before the fix', 'src/eventIdOf.ts',
+  'function instanceIdIsNearer(event: object, ctor: Function): boolean {\n',
+  'function instanceIdIsNearer(event: object, ctor: Function): boolean {\n  return false;\n', 'killed'),
+ ('I2 a static id declared on a class does not stop the walk', 'src/eventIdOf.ts',
+  '    if (declaresGetId(current)) {\n      return false;\n    }\n', '', 'killed'),
+ ('I3 an instance getId of its own is not seen', 'src/eventIdOf.ts',
+  'declaresGetId(event) || ', '', 'killed'),
+ ("I4 an instance getId on a class's prototype is not seen", 'src/eventIdOf.ts',
+  ' || declaresGetId((current as { prototype?: unknown }).prototype)', '', 'killed'),
+ ('I5 the instance id wins a tie on one class', 'src/eventIdOf.ts',
+  [('    if (declaresGetId(current)) {\n      return false;\n    }\n    if (declaresGetId(event)',
+    '    if (declaresGetId(event)'),
+   ('      return true;\n    }\n    current = Object.getPrototypeOf(current);',
+    '      return true;\n    }\n    if (declaresGetId(current)) {\n      return false;\n    }\n    current = Object.getPrototypeOf(current);')],
+  None, 'killed'),
+ ('I6 the instance branch runs without an instance getId function', 'src/eventIdOf.ts',
+  "const useInstance = typeof instanceGetId === 'function'\n      && (", 'const useInstance = (', 'killed'),
+ ('I7 a missing prototype reaches Object.hasOwn', 'src/eventIdOf.ts',
+  "  return value != null && Object.hasOwn(value, 'getId');",
+  "  return Object.hasOwn(value as object, 'getId');", 'killed'),
+ ('A1 the container resolves no inject entry', CONTAINER,
+  '                args.push(await this.resolve(entry, node));',
+  '                args.push(undefined);', 'killed'),
+ ('A2 each abstract of a class bind gets its own instance', CONTAINER,
+  '            for (const key of keys) {\n                this.bindings.set(key, record);',
+  "            for (const key of keys) {\n                this.bindings.set(key, { ...record, slot: Container.emptySlot() });", 'killed'),
+ ('A3 an inject entry autowires a fresh instance of its concrete', CONTAINER,
+  '                args.push(await this.resolve(entry, node));',
+  '                args.push(await this.resolve(entry, node).then((value) => new value.constructor()));', 'killed'),
+]

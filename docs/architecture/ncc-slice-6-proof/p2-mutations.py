@@ -1,0 +1,22 @@
+F = 'src/eventIdOf.ts'
+MUTATIONS = [
+ ('C1 control: break the id check', F, [("  if (typeof id !== 'string' || id.length === 0) {", "  if (false) {"), ('  return id;\n}', '  return id as string;\n}')], None, 'killed'),
+ ('C2 control: comment only', F, '  return id;\n}', '  // control\n  return id;\n}', 'survive'),
+ ('C3 control: syntax error', F, '  return id;\n}', '  return id;;; }}}\n}', 'refuse'),
+ ('A1 class branch skipped, class read as instance', F, "  if (typeof event === 'function') {", "  if ((typeof event === 'function') && Math.random() > 2) {", 'killed'),
+ ('A2 class without static id returns empty', F, "      throw new TypeError(`Event class ${label} has no static getId()`);", "      return '';", 'killed'),
+ ('A3 instance fallback removed', F, "    } else if (typeof instanceGetId === 'function') {", "    } else if (typeof instanceGetId === 'function' && Math.random() > 2) {", 'killed'),
+ ('A4 instance id preferred over static', F, "    if (typeof staticGetId === 'function') {", "    if (typeof staticGetId === 'function' && typeof instanceGetId !== 'function') {", 'killed'),
+ ('A5 missing id message omits the class name', F, "      throw new TypeError(`Event ${label} has no static getId() and no instance getId()`);", "      throw new TypeError('event has no id');", 'killed'),
+ ('A6 class error message omits the class name', F, "      throw new TypeError(`Event class ${label} has no static getId()`);", "      throw new TypeError('event class has no id');", 'killed'),
+ ('A7 empty id accepted', F, "  if (typeof id !== 'string' || id.length === 0) {", "  if (typeof id !== 'string') {", 'killed'),
+ ('A8 non-string id accepted', F, [("  if (typeof id !== 'string' || id.length === 0) {", "  if (id === '') {"), ('  return id;\n}', '  return id as string;\n}')], None, 'killed'),
+ ('A9 missing id throws a plain Error', F, "      throw new TypeError(`Event ${label} has no static getId() and no instance getId()`);", "      throw new Error(`Event ${label} has no static getId() and no instance getId()`);", 'killed'),
+ ('U1 anonymous label dropped', F, "  return ctor.name !== '' ? ctor.name : '(anonymous class)';", "  return ctor.name;", 'killed'),
+ ('U2 no-class label dropped', F, "    return '(no class)';", "    return '';", 'killed'),
+ ('U3 a non-function static getId counts as present', F, [("    if (typeof staticGetId === 'function') {", "    if (staticGetId !== undefined) {"), ("      id = staticGetId.call(ctor);", "      id = (staticGetId as Function).call(ctor);")], None, 'killed'),
+ ('U4 static getId called without the class as this', F, "      id = staticGetId.call(ctor);", "      id = staticGetId.call(undefined);", 'killed'),
+ ('U5 instance getId called without the instance as this', F, "      id = instanceGetId.call(event);", "      id = instanceGetId.call(undefined);", 'killed'),
+ ('U6 missing constructor not guarded', F, "    const staticGetId = ctor === undefined ? undefined : (ctor as { getId?: unknown }).getId;", "    const staticGetId = (ctor as unknown as { getId?: unknown }).getId;", 'killed'),
+ ('U7 class static getId called without the class as this', F, "    id = getId.call(event);", "    id = getId.call(undefined);", 'killed'),
+]

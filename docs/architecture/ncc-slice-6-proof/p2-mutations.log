@@ -1,0 +1,47 @@
+mutations in ncc-s06-a-event, tests in ncc-s06-a-event
+baseline exit=0
+C1 control: break the id check: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf throws a TypeError when the id is empty or is not a string
+C2 control: comment only: SURVIVED exit=0 expect=survive OK
+C3 control: syntax error: REFUSED (build failed: src/eventIdOf.ts(49,17): error TS1128: Declaration or statement expected. | src/eventIdOf.ts(49,18): error TS1128: Declaration or statement expected.)  expect=refuse
+A1 class branch skipped, class read as instance: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf throws a TypeError naming the class when there is no id
+A2 class without static id returns empty: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf throws a TypeError naming the class when there is no id
+A3 instance fallback removed: KILLED exit=1 expect=killed OK
+    ✖ a static getId that is not a function does not count, so the instance id is used
+    ✖ an object with a null prototype falls back to its own getId
+    ✖ eventIdOf falls back to the 0.1 instance getId when the class has no static one
+    ✖ the instance getId is called with the instance as this
+A4 instance id preferred over static: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf prefers the static id when both exist
+A5 missing id message omits the class name: KILLED exit=1 expect=killed OK
+    ✖ an anonymous class with no id gets a stand-in label in the TypeError
+    ✖ an object with a null prototype and no getId throws a TypeError saying it has no class
+    ✖ eventIdOf throws a TypeError naming the class when there is no id
+A6 class error message omits the class name: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf throws a TypeError naming the class when there is no id
+A7 empty id accepted: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf throws a TypeError when the id is empty or is not a string
+A8 non-string id accepted: KILLED exit=1 expect=killed OK
+    ✖ eventIdOf throws a TypeError when the id is empty or is not a string
+A9 missing id throws a plain Error: KILLED exit=1 expect=killed OK
+    ✖ an anonymous class with no id gets a stand-in label in the TypeError
+    ✖ an object with a null prototype and no getId throws a TypeError saying it has no class
+    ✖ eventIdOf throws a TypeError naming the class when there is no id
+U1 anonymous label dropped: KILLED exit=1 expect=killed OK
+    ✖ an anonymous class with no id gets a stand-in label in the TypeError
+U2 no-class label dropped: KILLED exit=1 expect=killed OK
+    ✖ an object with a null prototype and no getId throws a TypeError saying it has no class
+U3 a non-function static getId counts as present: KILLED exit=1 expect=killed OK
+    ✖ a static getId that is not a function does not count, so the instance id is used
+U4 static getId called without the class as this: KILLED exit=1 expect=killed OK
+    ✖ the static getId is called with the class as this, so an inherited static id reads the subclass
+U5 instance getId called without the instance as this: KILLED exit=1 expect=killed OK
+    ✖ the instance getId is called with the instance as this
+U6 missing constructor not guarded: KILLED exit=1 expect=killed OK
+    ✖ an object with a null prototype and no getId throws a TypeError saying it has no class
+    ✖ an object with a null prototype falls back to its own getId
+U7 class static getId called without the class as this: KILLED exit=1 expect=killed OK
+    ✖ the static getId is called with the class as this, so an inherited static id reads the subclass
+mismatches=0

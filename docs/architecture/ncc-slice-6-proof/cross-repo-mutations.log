@@ -1,0 +1,9 @@
+mutations in ncc-s06-proof-di, tests in ncc-s06-proof-event
+baseline exit=0
+C1-must-catch: class bind stores nothing: KILLED exit=1 expect=killed OK
+    ✖ the documented class binding gives the token and the class one shared bus
+C2-must-survive: comment only: SURVIVED exit=0 expect=survive OK
+C3-must-refuse: syntax break: REFUSED (build failed: src/Container.ts(150,26): error TS1005: ']' expected.)  expect=refuse
+X1 the class bind gives each abstract its own instance: KILLED exit=1 expect=killed OK
+    ✖ the documented class binding gives the token and the class one shared bus
+mismatches=0
