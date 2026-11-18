@@ -4,6 +4,10 @@
   "description": "Event contracts with priority listeners and an in-memory strategy, the TypeScript counterpart to PHPNomad's event package",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://github.com/tsnomad/event#readme",
+  "bugs": {
+    "url": "https://github.com/tsnomad/event/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tsnomad/event.git"
@@ -42,16 +46,20 @@
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "prepare": "npm run build",
+    "prepack": "npm run build",
     "pretypecheck": "npm run build",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "pretest": "npm run build",
     "test": "node --test"
   },
   "dependencies": {
-    "@tsnomad/di-container": "github:tsnomad/di-container#feat/ncc-s06-container-event"
+    "@tsnomad/di-container": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
